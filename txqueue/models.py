@@ -18,8 +18,17 @@
 from django.db import models
 from datetime import datetime
 
-# Create your models here.
+class QueuedTier(models.Model):
+    name = models.CharField(max_length=255)
+    url = models.CharField(max_length=2048)
+    starts = models.DateTimeField()
+    ends = models.DateTimeField()
+    max_active = models.IntegerField(default=0)
+    max_tickets = models.IntegerField(default=4)
+    cap = models.IntegerField(default=0)
+
 class Reservation(models.Model):
+    queued_tier = models.ForeignKey(QueuedTier)
     code = models.CharField(max_length=10)
     ip_address = models.CharField(max_length=15)
     is_ready = models.BooleanField(default=False)
@@ -27,10 +36,4 @@ class Reservation(models.Model):
     active = models.DateTimeField()
     started = models.DateTimeField(null=True, blank=True)
     finished = models.DateTimeField(null=True, blank=True)
-
-class Setting(models.Model):
-    setting = models.CharField(max_length=10)
-    value = models.CharField(max_length=255)
-
-    def __unicode__(self):
-        return "%s: %s" % (self.setting, self.value)
+    tickets = models.IntegerField()

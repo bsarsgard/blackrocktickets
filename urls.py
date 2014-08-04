@@ -9,6 +9,7 @@ urlpatterns = patterns('',
     # (r'^tickets/', include('tickets.foo.urls')),
     (r'^', include('tickets.texas.urls')),
     (r'^schedules/', include('tickets.txsched.urls')),
+    (r'^q/', include('tickets.txqueue.urls')),
     (r'^accounts/login/', 'tickets.texas.views.user_login'),
 
     # Uncomment the admin/doc line below and add 'django.contrib.admindocs' 

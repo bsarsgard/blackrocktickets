@@ -17,7 +17,7 @@
 """
 
 from django.views.generic.simple import direct_to_template, redirect_to
-from tickets.txqueue.models import Reservation, Setting
+from tickets.txqueue.models import Reservation, QueuedTier
 from random import Random, choice, randint
 from datetime import datetime, timedelta
 from django.conf import settings
@@ -26,9 +26,11 @@ from ponies import PONIES
 import string
 
 def index(request):
-    starts = datetime(*time.strptime(
-            Setting.objects.get(setting__exact='starts').value,
-            "%Y-%m-%d %H:%M:%S")[:5])
+    try:
+        tier = QueuedTier.objects.filter(
+                ends__gte=datetime.now()).order_by('starts')[0]
+    except:
+        return direct_to_template(request, 'txqueue/index.html')
 
     # get reservation
     res = None
@@ -60,22 +62,22 @@ def index(request):
     except:
         pass
 
-    if starts > datetime.now():
+    if tier.starts > datetime.now():
         # queue has not started
-        starts_in = starts - datetime.now()
+        starts_in = tier.starts - datetime.now()
         if starts_in < timedelta(hours=1) and not res:
             # hand out an early reservation
             res = Reservation(
                     code=''.join(Random().sample(string.letters+string.digits,
                     10)), ip_address=request.META['REMOTE_ADDR'])
-            reserved = starts
+            reserved = tier.starts
             reserved -= timedelta(seconds=reserved.second)
             reserved += timedelta(seconds=randint(0, 59))
             res.reserved = reserved
             res.active = datetime.now()
             res.save()
 
-        starts += timedelta(minutes=1)
+        starts = tier.starts + timedelta(minutes=1)
         pony = choice(PONIES)
         response = direct_to_template(request, 'txqueue/index.html', {
             "pony": pony, "starts": starts})
@@ -110,7 +112,6 @@ def index(request):
 
     # get stats
     queue_expired_before = datetime.now() - timedelta(minutes=15)
-    max_active = int(Setting.objects.get(setting__exact='max_active').value)
     active_expired_before = datetime.now() - timedelta(minutes=30)
     # get number active in the system (started, but not finished)
     active = Reservation.objects.exclude(started__isnull=True)\
@@ -124,9 +125,9 @@ def index(request):
     # get count ahead of this user
     ahead = queue.exclude(reserved__gt=res.reserved).count()
 
-    if active < max_active:
+    if active < tier.max_active:
         # the active list has open spots
-        ready_count = max_active - active
+        ready_count = tier.max_active - active
         ready = queue.order_by('reserved', 'id')[:ready_count]
         if res in ready:
             res.is_ready = 1
@@ -162,7 +163,7 @@ def index(request):
             {"reservation": res, "active": active, "in_queue": in_queue,
                 "ahead": ahead, "pony": pony, "return_url": return_url,
                 "is_started": is_started, "since_start": since_start,
-                "wait_message": wait_message})
+                "wait_message": wait_message, "tier": tier})
 
     # set reservation cookie
     max_age = max_age = 24*60*60
