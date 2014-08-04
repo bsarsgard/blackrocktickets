@@ -1,0 +1,84 @@
+<html>
+<head>
+<title>Ticket Queue</title>
+	<style>
+	body {
+		text-align: center;
+	}
+	pre {
+		text-align: left;
+		font-weight: bold;
+	}
+	</style>
+	{% if reservation.is_ready %}
+	<style>
+	body {
+		background-color: green;
+		color: white;
+	}
+	a {
+		color: black;
+	}
+	</style>
+	{% endif %}
+	<script language="javascript">
+	function countdown() {
+		var cd = document.getElementById('countdown');
+		var count = parseInt(cd.innerHTML);
+		count -= 1;
+		if (count > 0) {
+			cd.innerHTML = count;
+			setTimeout("countdown();", 1000);
+		}
+	}
+	</script>
+</head>
+<body>
+	<h1>Playa del Fuego Ticket Queue</h1>
+	<!--
+	<h2><font color="red">Sorry folks, Round 2 is sold out.</font></h2>
+	-->
+	<!--
+	<h2>Tickets are just about sold out.  If you have a low number you may want to stick around in case anybody has payment problems and has to give theirs up, but it's just about over</h2>
+	-->
+	<h2>Queue is closing down.  There may be tickets in the next 15 minutes from expired unpaid orders, so it couldn't hurt to check back at <a href="http://184.72.226.185/buy/4/">The Ticket Sales Site</a> and give it a try.</h2>
+	<!--
+	{% if reservation %}
+	{% if is_started %}
+	<p>You are number <strong>{{ ahead }}</strong> of <strong>{{ in_queue }}</strong></p>
+	{% else %}
+	<p>Queue position pending ... {{ wait_message }}</p>
+	{% endif %}
+	{% if reservation.is_ready %}
+	<h1 style="color: black;">The ticket system will see you now</h1>
+	<p>
+	
+	<br/><a href="{{ return_url }}/?code={{ reservation.code }}">Click here to proceed</a>
+	</p>
+	{% else %}
+	<h2>Please wait</h2>
+	<p>This page will automatically refresh in <span id="countdown">30</span> seconds if javascript is enabled.
+	<br/>You will not lose your place in line, so there is no need to hammer on the F5 key like a jerk.</p>
+	<script language="javascript">
+	setTimeout("window.location = '/q/?code={{ reservation.code }}'", 30000);
+	setTimeout("countdown();", 1000);
+	</script>
+	{% endif %}
+	{% else %}
+	<p>The ticket queue will open in {{ starts|timeuntil }}</p>
+<p>Hold your ponies, it's coming</p>
+	<script language="javascript">
+	setTimeout("window.location = window.location", 60000);
+	</script>
+	{% endif %}
+	{% if pony %}
+<div><a href="http://www.cornify.com" onclick="cornify_add();return false;"><img src="http://www.cornify.com/assets/cornifycorn.gif" width="52" height="51" border="0" alt="Cornify" /></a><script type="text/javascript" src="http://www.cornify.com/js/cornify.js"></script></div>
+<pre>
+{{ pony|safe }}
+</pre>
+	{% else %}
+	<h2 style="color: blue;">Seriously, dude.  What did I tell you about hammering F5?  STOP IT!</h2>
+	{% endif %}
+	-->
+</body>
+</html>

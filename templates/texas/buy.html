@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block head %}
+{% endblock %}
+{% block title %}Index{% endblock %}
+{% block main_menu %}
+<ul>
+    <li><a href="/"><span></span>Home</a></li>
+    <li><a href="/buy/" class="current"><span></span>Tickets</a></li>
+    <li><a href="/schedules/"><span></span>Schedule</a></li>
+    <li><a href="/about/"><span></span>About</a></li>
+    <li><a href="/contact/"><span></span>Contact</a></li>
+</ul>   
+{% endblock %}
+{% block content %}
+{% if error %}
+<script type="text/javascript">
+$(function() {
+	$("#dialog").dialog("destroy");
+	$("#dialog-error").dialog({
+		modal: true,
+		buttons: {
+			Ok: function() {
+				$(this).dialog('close');
+			}
+		}
+	});
+});
+</script>
+
+<div id="dialog-error" title="Purchase Error">
+	<p>
+		<span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>
+		{{ error }}
+	</p>
+</div>
+{% endif %}
+{% for occurrence in occurrences %}
+{% if occurrence.get_active_tiers %}
+{{ occurrence.event.header|safe }}
+<div class="header_01">{{ occurrence }}</div>
+<ul class="category_list">
+	{% for tier in occurrence.get_active_tiers %}
+	{% if tier.password == "" or show == 'show' %}
+<form id="buy_tickets{{ tier.id }}" name="buy_tickets{{ tier.id }}" method="post">
+<input type="hidden" id="occurrence_id" name="occurrence_id" value="{{ occurrence.id }}" />
+	<h3>{{ tier.label }}:</h3></h3>
+	{{ tier.description|safe }}
+	{% if tier.use_queue and not code %}
+	<p>This tier uses a queuing system.</p>
+	<p><a href="{{ queue_url }}">Click here to enter the queue.</a></p>
+	{% else %}
+	{% ifnotequal tier.get_tickets_available 0 %}
+	<div class="rc_btn_01"><a href="#" onclick="document.buy_tickets{{ tier.id }}.submit();">Buy Now</a></div>
+	<input type="hidden" name="code" id="code" value="{{ code }}" />
+	<li>
+	{% if occurrence.allow_donations %}
+	Optional donation: <input type="text" id="donation_{{ tier.id }}" name="donation_{{ tier.id }}" style="width:50px" />
+	<br/>
+	{% endif %}
+	Tickets: <select id="tickets_{{ tier.id }}" name="tickets_{{ tier.id }}">
+		{% for ticket_quantity in tier.get_ticket_range %}
+		<option value="{{ ticket_quantity }}">{{ ticket_quantity }}</option>
+		{% endfor %}
+	</select>
+	<strong>${{ tier.price }}
+	{% if occurrence.event.paypal_currency %}
+	({{ occurrence.event.paypal_currency }})
+	{% endif %}
+	</strong>
+	{% ifnotequal tier.password "" %}
+	<br/><em>This tier is password protected to restrict sales.</em>
+	<br/>Password: <input type="text" id="password_{{ tier.id }}" name="password_{{ tier.id }}" />
+	{% endifnotequal %}
+	</li>
+	{% if occurrence.options %}
+	{% for option in occurrence.options.all %}
+	<div style="margin-left: 10px">
+		<input type="checkbox" name="option_{{ option.id }}" id="option_{{ option.id }}" value="1"/>
+		<label for="option_{{ option.id }}">
+			{{ option.label }}
+			{% if option.price %}
+			- ${{ option.price }}
+			{% endif %}
+		</label>
+		{% if option.description %}
+		<p style="margin-left: 25px;">
+		<em>{{ option.description }}</em>
+		</p>
+		{% endif %}
+	</div>
+	{% endfor %}
+	{% endif %}
+	{% if occurrence.coupons.all %}
+	<br/>Coupon Code: <input type="text" id="coupon" name="coupon" />
+	{% endif %}
+	{% else %}
+	<strong>This tier is currently Sold Out.</strong>
+	{% endifnotequal %}
+	{% endif %}
+</form>
+<br/>
+	{% endif %}
+	{% endfor %}
+</ul>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<hr/>
+<div class="cleaner"></div>        
+{% else %}
+{% if occurrence.get_future_tiers %}
+<h2>Sales for this event have not yet begun.  Please check back later for the following ticket sales:</h2>
+
+<!--<h1><a href="http://ec2-184-72-162-180.compute-1.amazonaws.com/">Please proceed to the queue to get ready for round 2:</a></h1>-->
+<ul>
+{% for tier in occurrence.get_future_tiers %}
+<li><strong>{{ tier }}</strong>: {{ tier.start_date|date:"D, d M Y, P" }} ({{ tier.start_date|timeuntil }})<br/>&nbsp;&nbsp;&nbsp;&nbsp;{{ tier.cap|default_if_none:"Unlimited" }} tickets - ${{ tier.price }}</li>
+{% endfor %}
+</ul>
+{% endif %}
+{% endif %}
+{% endfor %}
+{% endblock %}

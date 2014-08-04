@@ -1,0 +1,192 @@
+{% extends "txsched/index.html" %}
+{% block content %}
+<script type="text/javascript">
+function sign_up(position, start_date, end_date, detail_required) {
+	$("#sign_up_position").val(position);
+	$("#sign_up_start").val(start_date);
+	$("#sign_up_end").val(end_date);
+	if (detail_required == 'True') {
+		$("#sign_up_detail").show();
+	} else {
+		$("#sign_up_detail").hide();
+	}
+	$("#sign_up_dialog").dialog('open');
+}
+function remove_shift(position, start_date) {
+	$("#remove_position").val(position);
+	$("#remove_time").val(start_date);
+	$("#remove_dialog").dialog('open');
+}
+function show_description(label, description, performer) {
+	$("#description_p").text(description);
+	$("#performer_div").text(performer);
+	$("#description_dialog").dialog('option', 'title', label);
+	$("#description_dialog").dialog('open');
+}
+$(document).ready(function() {
+	$("#sign_up_dialog").dialog({
+		autoOpen: false,
+		modal: true,
+		width: 400,
+		buttons: {
+			'Sign Up': function() {
+				$("#sign_up_form").submit();
+				$(this).dialog('close');
+			},
+			Cancel: function() {
+				$(this).dialog('close');
+			}
+		}
+	});
+	$("#remove_dialog").dialog({
+		autoOpen: false,
+                modal: true,
+		buttons: {
+			'Remove': function() {
+				$("#remove_form").submit();
+				$(this).dialog('close');
+			},
+			Cancel: function() {
+				$(this).dialog('close');
+			}
+		}
+	});
+	$("#description_dialog").dialog({
+		autoOpen: false,
+		modal: true,
+		buttons: {
+			Ok: function() {
+				$(this).dialog('close');
+			}
+		}
+	});
+	$("#cancel_sign_up").button().click(function() {
+		$("#sign_up_dialog").dialog('close');
+	});
+	$("#submit_sign_up").button().click(function() {
+		$("#sign_up_form").submit();
+		$("#sign_up_dialog").dialog('close');
+	});
+	$(".sign_up").button();
+	$(".remove").button();
+});
+</script>
+<div class="header_01">Schedule - {{ schedule }}</div>
+
+{% if schedule.description %}
+<p>
+{{ schedule.description|safe }}
+</p>
+{% endif %}
+
+<ul>
+{% for position in schedule.get_positions %}
+{% if position.description %}
+<li>{{ position.description|safe }}</li>
+{% endif %}
+{% endfor %}
+</ul>
+
+<table class="schedule ui-widget ui-widget-content">
+	<thead>
+		<tr class="ui-widget-header">
+			<th></th>
+			{% for position in schedule.get_positions %}
+			{% if not position.parent %}
+			<th>{{ position }}</th>
+			{% endif %}
+			{% endfor %}
+		</tr>
+	</thead>
+	<tbody>
+		{% for slot in slots %}
+		<tr>
+			<th class="ui-widget-header">
+				{% if slot.header %}
+				<div class="header_02">{{ slot.header }}</div>
+				{% endif %}
+				{{ slot.start_date|date:"f A" }}
+			</th>
+			{% for position in slot.positions %}
+			<td rowspan="{{ position.blocks }}" class="{% if position.black_outs %}black_out{% endif %}">
+				{% if position.black_outs %}
+				{% for black_out in position.black_outs %}
+				{{ black_out.label }}
+				{% endfor %}
+				{% else %}
+				{% for shift in position.shifts %}
+				{% if shift.description %}
+				<a href="#" onclick="show_description('{{ shift.label }}', '{{ shift.description }}', '{{ shift.user.get_profile.nick_name }}'); return false;">{{ shift.label }}</a>
+				{% else %}
+				{{ shift.label }}
+				{% endif %}
+				{% ifequal request.user shift.user %}
+				<button class="remove" onclick="remove_shift('{{ position.position_id }}','{{ slot.start_date|date:"Y-m-d H:i" }}');">Remove</button>
+				{% endifequal %}
+				{% if sign_up in request.user.signup_set.all %}
+					&lt;<a href="mailto:{{ shift.user.email }}?subject=Playa Del Fuego {{ schedule }} Schedule" target="_new">{{ shift.user.email }}</a>&gt;
+				{% else %}
+					{% if schedule in request.user.schedule_set.all %}
+						&lt;<a href="mailto:{{ shift.user.email }}?subject=Playa Del Fuego {{ schedule }} Schedule" target="_new">{{ shift.user.email }}</a>&gt;
+					{% endif %}
+				{% endif %}
+    <br/>
+				{% endfor %}
+				{% if request.user.is_authenticated %}
+				{% if position.shift_open %}
+				<button class="sign_up" onclick="sign_up('{{ position.position_id }}','{{ slot.start_date|date:"Y-m-d H:i" }}','{{ position.shift_end|date:"Y-m-d H:i" }}', '{{ position.detail_required }}');">Sign Up ({{ slot.start_date|date:"f A" }} - {{ position.shift_end|date:"f A" }})</button>
+				{% endif %}
+				{% endif %}
+				{% endif %}
+			</td>
+			{% endfor %}
+		</tr>
+		{% endfor %}
+	</tbody>
+</table>
+<div id="sign_up_dialog" title="Sign Up">
+	<form id="sign_up_form" method="post">
+	<input type="hidden" id="sign_up_position" name="sign_up_position" value="" />
+	<input type="hidden" id="sign_up_start" name="sign_up_start" value="" />
+	<input type="hidden" id="sign_up_end" name="sign_up_end" value="" />
+	<fieldset>
+		<label for="nick_name">Confirm Display Name</label><br/>
+		<font color="#FF0000"> NOTE: PLEASE DO NOT ENTER MULTIPLE NAMES!<br />
+		Use a different account for each person volunteering.</font>
+  <br/>
+		{% if request.user.get_profile.nick_name %}
+		<input type="text" name="nick_name" id="nick_name" size="35" class="text ui-widget-content ui-corner-all" value="{{ request.user.get_profile.nick_name }}" />
+		{% else %}
+		<input type="text" name="nick_name" id="nick_name" size="35" class="text ui-widget-content ui-corner-all" value="{{ request.user }}" />
+		{% endif %}
+
+		<div id="sign_up_detail">
+			<div>
+			<label for="label">Title</label><br/>
+			<input name="label" type="text" class="text ui-widget-content ui-corner-all" id="label"/>
+			</div><div>
+			<label for="label">Description</label><br/>
+			<textarea name="description" id="description" class="text ui-widget-content ui-corner-all"></textarea>
+			</div>
+		</div>
+	</fieldset>
+	</form>
+<!--
+	<button id="submit_sign_up">Submit</button>
+	<button id="cancel_sign_up">Cancel</button>
+-->
+</div>
+<div id="remove_dialog" title="Remove Sign Up">
+	<form id="remove_form" method="post">
+	<input type="hidden" id="remove_position" name="remove_position" value="" />
+	<input type="hidden" id="remove_time" name="remove_time" value="" />
+	</form>
+	<p><span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>Are you sure you don't want to work this shift?</p>
+</div>
+<div id="description_dialog" title="Show Detail">
+	<p id="description_p">Nothing</p>
+	<br/>
+	<p>Performer: <div id="performer_div"></div></p>
+</div>
+
+{% endblock %}

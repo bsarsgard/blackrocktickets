@@ -1,0 +1,27 @@
+{% extends "texas/buy.html" %}
+{% block head %}
+{% endblock %}
+{% block title %}Index{% endblock %}
+{% block content %}
+<div class="header_01"><strong>Receipt of Purchase</strong></div>
+<div class="header_02">Tickets:</div>
+<ul>
+	{% for ticket in purchase.ticket_set.all %}
+	<li>#{{ ticket.tier.code }}{{ ticket.number|stringformat:"05i" }}{{ ticket.code }} - {{ ticket.tier }}: ${{ ticket.tier.price }}</li>
+	{% endfor %}
+</ul>
+<p>Total paid: ${{ purchase.get_price }}
+{% if purchase.occurrence.event.paypal_currency %}
+({{ purchase.occurrence.event.paypal_currency }})
+{% endif %}
+</p>
+<p><em>Click "Print Tickets" for printable entry passes with barcodes for this order.</em></p>
+<p>You may choose instead to print your tickets at any time by logging in and clicking "View My Orders" in the menu to the right.  You will also be emailed a confirmation with a link to print your tickets later.</p>
+<div class="rc_btn_01"><a href="/buy/purchases/print/{{ purchase.id }}/" target="_blank">Print Tickets</a></div>
+{% if purchase.occurrence.event.receipt_text %}
+{{ purchase.occurrence.event.receipt_text|safe }}
+{% endif %}
+{% if purchase.occurrence.event.survival_guide %}
+<div class="rc_btn_01"><a href="/{{ purchase.occurrence.event.survival_guide }}" target="_blank">Survival Guide</a></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "texas/buy.html" %}
+{% block head %}
+{% endblock %}
+{% block title %}Index{% endblock %}
+{% block content %}
+<div class="header_01"><strong>Your Purchase is not yet complete!</strong></div>
+<p>You have requested the following:
+<ul>
+	{% for purchase_request in purchase_requests %}
+	<li>{{ purchase_request.tickets_requested }} - ${{ purchase_request.tier.price }}: {{ purchase_request.tier }}</li>
+	{% endfor %}
+</ul>
+{% endblock %}

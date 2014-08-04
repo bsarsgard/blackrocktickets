@@ -1,0 +1,77 @@
+{% extends "texas/buy.html" %}
+{% load texas_extras %}
+{% block head %}
+{% endblock %}
+{% block title %}Index{% endblock %}
+{% block content %}
+<script type="text/javascript">
+function transfer(ticket_id) {
+	$("#ticket_id").val(ticket_id);
+        $("#transfer_dialog").dialog('open');
+	//alert('Ticket transfers are not available 24 hours prior to the event. Tickets must be transfered manually via print-out.');
+}
+$(document).ready(function() {
+        $("#transfer_dialog").dialog({
+                autoOpen: false,
+                modal: true,
+                width: 250,
+                buttons: {
+                        'Transfer': function() {
+                                $("#transfer_form").submit();
+                                $(this).dialog('close');
+                        },
+                        Cancel: function() {
+                                $(this).dialog('close');
+                        }
+                }
+        });
+});
+</script>
+<div class="header_01"><strong>Your Tickets</strong></div>
+<p><a href="/buy/">Click here to buy tickets</a></p>
+{% if paid_purchases %}
+<h3>Tickets You Have Purchased</h3>
+<ul>
+	{% for purchase in paid_purchases %}
+	{% for ticket in purchase.ticket_set.all %}
+	<li>
+	{% if ticket.assigned_user %}
+	{{ ticket.purchase.occurrence }}<br/>
+	<strong>Assigned to: </strong>{{ ticket.assigned_user }}
+	{% else %}
+	<div class="rc_btn_01"><a href="/tickets/print/{{ ticket.id }}/" target="_blank">Print</a></div>
+<!--
+	<div class="rc_btn_01"><a href="#" onclick="transfer('{{ ticket.id }}');">Transfer</a></div>
+-->
+	{{ ticket.purchase.occurrence }}<br/>
+	<strong>{{ ticket.tier.code }}{{ ticket.number|stringformat:"05i" }}{{ ticket.code }}</strong>
+	{% endif %}
+	</li>
+	{% endfor %}
+	{% endfor %}
+</ul>
+{% endif %}
+{% if assigned_tickets %}
+<h3>Tickets Assigned to You</h3>
+<ul>
+	{% for ticket in assigned_tickets %}
+	<li>
+	<div class="rc_btn_01"><a href="/tickets/print/{{ ticket.id }}/" target="_blank">Print</a></div>
+	{{ ticket.purchase.occurrence }}<br/>
+	<strong>{{ ticket.tier.code }}{{ ticket.number|stringformat:"05i" }}{{ ticket.code }}</strong>
+	<br/><strong>Purchaser: </strong>{{ ticket.purchase.user }}
+	{% endfor %}
+</ul>
+{% endif %}
+<div id="transfer_dialog" title="Transfer Ticket">
+        <form id="transfer_form" method="post">
+	<input type="hidden" id="action" name="action" value="transfer" />
+        <input type="hidden" id="ticket_id" name="ticket_id" value="" />
+	<p><strong>WARNING</strong>: Transfers are <em>PERMANENT</em> and will invalidate any previously printed copy of this ticket.  Only the assigned user will have access to the new ticket number.
+        <fieldset>
+                <label for="nick_name">Transfer to Email Address</label><br/>
+                <input type="text" name="email" id="email" class="text ui-widget-content ui-corner-all" value="" />
+        </fieldset>
+        </form>
+</div>
+{% endblock %}

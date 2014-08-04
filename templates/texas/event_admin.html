@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block head %}
+{% endblock %}
+{% block title %}About Us{% endblock %}
+{% block content %}
+<div class="header_01">Administer {{ event }}</div>
+{% for occurrence in event.occurrence_set.all %}
+<p>
+<div class="header_02">{{ occurrence.label }}</div>
+<ul class="category_list">
+	<li><a href="/occurrences/{{ occurrence.id }}/admin/ticket_list/">Ticket Listing</a></li>
+	<li><a href="/occurrences/{{ occurrence.id }}/admin/ticket_stats/">Statistics</a></li>
+	<li><a href="/occurrences/{{ occurrence.id }}/admin/ticket_export/">XML Export</a></li>
+	<li><a href="/occurrences/{{ occurrence.id }}/admin/sale/">Cash Sale</a></li>
+	<li><a href="/occurrences/{{ occurrence.id }}/admin/option_list/">Options List</a></li>
+</ul>
+</p>
+{% endfor %}
+{% endblock %}

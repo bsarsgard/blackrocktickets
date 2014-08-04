@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block head %}
+<script type="text/javascript" src="http://www.google.com/jsapi"></script>
+<script type="text/javascript">
+google.load('visualization', '1', {'packages':['piechart', 'barchart']});
+google.setOnLoadCallback(drawChart);
+
+function drawChart() {
+	var tsbd_data = new google.visualization.DataTable();
+	tsbd_data.addColumn('string', 'Date');
+	tsbd_data.addColumn('number', 'Tickets Sold');
+	tsbd_data.addRows([
+	{% for row in tickets_sold_by_days %}
+		{% if forloop.last %}
+		['{{ row.0 }}', {{ row.1 }}]
+		{% else %}
+		['{{ row.0 }}', {{ row.1 }}],
+		{% endif %}
+	{% endfor %}
+	]);
+
+	var tsbd_chart = new google.visualization.BarChart(document.getElementById('chart_tickets_sold_by_day'));
+	tsbd_chart.draw(tsbd_data, {width: 650, height: {% widthratio tickets_sold_by_days|length 90 2000 %} , is3D: true, title: 'Tickets Sold by Day', legend: 'none'});
+	
+	var ubtc_data = new google.visualization.DataTable();
+	ubtc_data.addColumn('string', 'Ticket Count');
+	ubtc_data.addColumn('number', 'Users');
+	ubtc_data.addRows([
+	{% for row in users_by_ticket_count %}
+		{% if forloop.last %}
+		['{{ row.0 }} Ticket{{ row.0|pluralize }}', {{ row.1 }}]
+		{% else %}
+		['{{ row.0 }} Ticket{{ row.0|pluralize }}', {{ row.1 }}],
+		{% endif %}
+	{% endfor %}
+	]);
+
+	var ubtc_chart = new google.visualization.PieChart(document.getElementById('chart_users_by_ticket_count'));
+	ubtc_chart.draw(ubtc_data, {width: 650, height: 400, is3D: true, title: 'User Count by Ticket Counts'});
+
+	var tsbm_data = new google.visualization.DataTable();
+	tsbm_data.addColumn('string', 'Date');
+	tsbm_data.addColumn('number', 'Tickets Sold');
+	tsbm_data.addRows([
+	{% for row in tickets_sold_by_month %}
+		{% if forloop.last %}
+		['{{ row.0 }}', {{ row.1 }}]
+		{% else %}
+		['{{ row.0 }}', {{ row.1 }}],
+		{% endif %}
+	{% endfor %}
+	]);
+
+	var tsbm_chart = new google.visualization.PieChart(document.getElementById('chart_tickets_sold_by_month'));
+	tsbm_chart.draw(tsbm_data, {width: 650, height: 400, is3D: true, title: 'Tickets Sold by Month'});
+
+	var atbt_data = new google.visualization.DataTable();
+	atbt_data.addColumn('string', 'Tier');
+	atbt_data.addColumn('number', 'Average Tickets');
+	atbt_data.addRows([
+	{% for row in avg_tickets_by_tier %}
+		{% if forloop.last %}
+		['{{ row.0 }}', {{ row.1 }}]
+		{% else %}
+		['{{ row.0 }}', {{ row.1 }}],
+		{% endif %}
+	{% endfor %}
+	]);
+
+	var atbt_chart = new google.visualization.PieChart(document.getElementById('chart_avg_tickets_by_tier'));
+	atbt_chart.draw(atbt_data, {width: 650, height: 400, is3D: true, title: 'Average Tickets by Tier'});
+
+	var tsbt_data = new google.visualization.DataTable();
+	tsbt_data.addColumn('string', 'Tier');
+	tsbt_data.addColumn('number', 'Tickets Sold');
+	tsbt_data.addRows([
+	{% for row in tickets_sold_by_tier %}
+		{% if forloop.last %}
+		['{{ row.0 }}', {{ row.1 }}]
+		{% else %}
+		['{{ row.0 }}', {{ row.1 }}],
+		{% endif %}
+	{% endfor %}
+	]);
+
+	var tsbt_chart = new google.visualization.PieChart(document.getElementById('chart_tickets_sold_by_tier'));
+	tsbt_chart.draw(tsbt_data, {width: 420, height: 250, is3D: true, title: 'Tickets Sold by Tier'});
+}
+</script>
+{% endblock %}
+{% block title %}About Us{% endblock %}
+{% block content %}
+<div class="header_01">Administer {{ occurrence }} - Statistics</div>
+<div id="chart_tickets_sold_by_tier"></div>
+<br/>
+<div id="chart_tickets_sold_by_month"></div>
+<br/>
+<div id="chart_users_by_ticket_count"></div>
+<br/>
+<div id="chart_avg_tickets_by_tier"></div>
+<br/>
+<div id="chart_tickets_sold_by_day"></div>
+<br/>
+<div class="rc_btn_01"><a href="/events/{{ occurrence.event.id }}/admin/">Back</a></div>
+{% endblock %}

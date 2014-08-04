@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block head %}
+{% endblock %}
+{% block title %}Contact Us{% endblock %}
+{% block main_menu %}
+<ul>
+    <li><a href="/"><span></span>Home</a></li>
+    <li><a href="/buy/"><span></span>Tickets</a></li>
+    <li><a href="/schedules/"><span></span>Schedule</a></li>
+    <li><a href="/about/"><span></span>About</a></li>
+    <li><a href="/contact/" class="current"><span></span>Contact</a></li>
+</ul>   
+{% endblock %}
+{% block content %}
+<div class="header_01">Contact Black Rock Tickets</div>
+<p>Black Rock Tickets is a service provider for multiple event ticket sales.  If you need help or more information, we request that you please contact the event coordinators first:</p>
+<ul>
+{% for event in events %}
+<li><b>{{ event.label }}</b>: <a href="mailto:{{ event.admin_email }}">{{ event.admin_email }}</a></li>
+{% endfor %}
+</ul>
+<p>If you would like to report a bug, have questions about Black Rock Tickets itself, or would like to inquire about using our software for your event, please contact <a href="mailto:tickets@blackrocktickets.com">tickets@blackrocktickets.com</a></p>
+{% endblock %}

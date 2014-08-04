@@ -1,0 +1,116 @@
+{% extends "texas/buy.html" %}
+{% load texas_extras %}
+{% block head %}
+{% endblock %}
+{% block title %}Index{% endblock %}
+{% block content %}
+<div class="header_01"><strong>Your Ticket Orders</strong></div>
+<p><a href="/buy/">Click here to buy tickets</a></p>
+<p>Current and past purchases:</p>
+<ul>
+	{% for purchase in tentative_purchases %}
+	<li>
+	<strong>{{ purchase.occurrence }} - {{ purchase.ticket_set.count }} ticket{{ purchase.ticket_set.count|pluralize }}</strong>
+	<br/><strong>Total Price: ${{ purchase.get_price }}
+	{% if purchase.occurrence.event.paypal_currency %}
+	({{ purchase.occurrence.event.paypal_currency }})
+	{% endif %}
+	</strong>
+	<br/>Status: <span class="status_{{ purchase.get_status_display }}">{{ purchase.get_status_display }}</span>
+	<br/>Expires: {{ purchase.expiration_date|timeuntil }}
+	</li>
+	{% ifnotequal purchase.get_price 0 %}
+	<strong>Payment options</strong> (please use PayPal if possible):
+	<br/>
+	<div style="float: right;"><a href="/buy/purchases/pay/{{ purchase.id }}/"><img src="https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif" align="left" border="0"></a></div>
+  <br/>
+  <br/>
+  <br/>
+  <br/>
+<div class="rc_btn_blank">
+
+<!--
+<form action="" method="post">
+  <fieldset style="width:12em; margin:auto;">
+    <label for="email">Email:</label>
+    <input type="text" id="email" name="email" value="api@wepay.com"/>
+    <label for="amount">Amount:</label>
+    <input type="text" id="amount" name="amount" value="20"/>
+    <label for="reason">Reason:</label>
+    <input type="text" id="reason" name="reason" value="You owe me $20"/>
+    <button id="foo">Pay</button>
+  </fieldset>
+</form>
+
+
+<script>
+$("#foo").click(function(e) {
+  $.getJSON("https://www.wepay.com/sp/create?format=jsonp&callback=?",
+         {  token: "41547a3769", 
+            group_id: "22954",
+            buyer_email: $("#email").val(),
+            amount: $("#amount").val(),
+            reason: $("#reason").val()
+         } ,function(data) {
+            window.location.href=data.result;
+         });
+  return false;
+});
+</script>
+-->
+	<!--
+<form action="https://authorize.payments.amazon.com/pba/paypipeline" method="post" id="amazon_pay_{{ purchase.id }}">
+  <input type="hidden" name="immediateReturn" value="1" >
+  <input type="hidden" name="collectShippingAddress" value="0" >
+  <input type="hidden" name="signatureVersion" value="2" >
+  <input type="hidden" name="signatureMethod" value="HmacSHA256" >
+  <input type="hidden" name="accessKey" value="11SEM03K88SD016FS1G2" >
+  <input type="hidden" name="amount" value="USD {{ purchase.get_price }}" >
+  <input type="hidden" name="signature" value="DzR2GHyaVOg9QWPVZ/nb4eSjybW7jo30G0gVEw81L/o=" >
+  <input type="hidden" name="isDonationWidget" value="0" >
+  <input type="hidden" name="description" value="Playa del Fuego Ticket Payment" >
+  <input type="hidden" name="amazonPaymentsAccountId" value="MMPSHXUFMPNG7DU3FIPGIN6ZRMVNPUS5N8BJ6D" >
+  <input type="hidden" name="ipnUrl" value="http://tickets.playadelfuego.org/buy/amazon_instantpaymentnotification/" >
+  <input type="hidden" name="returnUrl" value="http://tickets.playadelfuego.org/buy/amazon_process/" >
+  <input type="hidden" name="processImmediate" value="1" >
+  <input type="hidden" name="cobrandingStyle" value="logo" >
+  <input type="hidden" name="abandonUrl" value="http://tickets.playadelfuego.org/buy/amazon_cancel/" >
+  <input type="image" src="http://g-ecx.images-amazon.com/images/G/01/asp/beige_small_paynow_withmsg_darkbg.gif" border="0">
+</form>
+</div>
+-->
+<!--<a href="#" onclick="document.forms['amazon_pay_{{ purchase.id }}']['csrfmiddlewaretoken'].name='';document.forms['amazon_pay_{{ purchase.id }}']['csrfmiddlewaretoken'].value='';document.forms['amazon_pay_{{ purchase.id }}'].submit()"><img src="http://g-ecx.images-amazon.com/images/G/01/asp/beige_small_paynow_withmsg_darkbg.gif" border="0" /></a>-->
+	{% endifnotequal %}
+	{% endfor %}
+	{% for purchase in paid_purchases %}
+	<li>
+	<div class="rc_btn_01"><a href="/buy/purchases/print/{{ purchase.id }}/" target="_blank">Print</a></div>
+	<strong>{{ purchase.occurrence }} - {{ purchase.ticket_set.count }} ticket{{ purchase.ticket_set.count|pluralize }}</strong>
+	<br/>Status: <span class="status_{{ purchase.get_status_display }}">{{ purchase.get_status_display }}</span>
+	<br/>Ordered: {{ purchase.purchase_date }}
+	</li>
+	{% endfor %}
+	{% for purchase in expired_purchases %}
+	<li>
+	<strong>{{ purchase.occurrence }} - {{ purchase.ticket_set.count }} ticket{{ purchase.ticket_set.count|pluralize }}</strong>
+	<br/>Status: <span class="status_Expired">Expired</span>
+	<br/>Ordered: {{ purchase.purchase_date }}
+	<br/>Expired: {{ purchase.expiration_date }}
+	</li>
+	{% endfor %}
+	{% for purchase in held_purchases %}
+	<li>
+	<strong>{{ purchase.occurrence }} - {{ purchase.ticket_set.count }} ticket{{ purchase.ticket_set.count|pluralize }}</strong>
+	<br/>Status: <span class="status_{{ purchase.get_status_display }}">{{ purchase.get_status_display }}</span>
+	<br/>Ordered: {{ purchase.purchase_date }}
+	</li>
+	{% endfor %}
+	{% for purchase in old_purchases %}
+	<li>
+	(Prior event)<br/>
+	<strong>{{ purchase.occurrence }} - {{ purchase.ticket_set.count }} ticket{{ purchase.ticket_set.count|pluralize }}</strong>
+	<br/>Ordered: {{ purchase.purchase_date }}
+	</li>
+	{% endfor %}
+</ul>
+{% endblock %}

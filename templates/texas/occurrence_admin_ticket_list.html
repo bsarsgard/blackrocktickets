@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block head %}
+{% endblock %}
+{% block title %}About Us{% endblock %}
+{% block content %}
+<div class="header_01">Administer {{ occurrence }} - Ticket List</div>
+<table class="ticket_listing">
+<tbody>
+{% for tier in occurrence.tier_set.all %}
+	<tr>
+		<th colspan="4">{{ tier.label }} - {{ tier.get_ticket_count }}</th>
+	</tr>
+	{% for ticket in tier.get_ticket_set_for_list %}
+	<tr>
+		<td>{{ ticket.tier.code }}{{ ticket.number|stringformat:"05i" }}{{ ticket.code }}</td>
+		<td>{{ ticket.purchase.user.email }}</td>
+		<td>
+		{{ ticket.assigned_name }}
+		</td>
+		<td>{{ ticket.purchase.purchase_date }}</td>
+	</tr>
+	{% endfor %}
+{% endfor %}
+</tbody>
+</table>
+<br/>
+<div class="rc_btn_01"><a href="/events/{{ occurrence.event.id }}/admin/">Back</a></div>
+{% endblock %}

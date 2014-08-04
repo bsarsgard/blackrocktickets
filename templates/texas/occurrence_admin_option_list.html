@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block head %}
+{% endblock %}
+{% block title %}About Us{% endblock %}
+{% block content %}
+<div class="header_01">Administer {{ occurrence }} - Ticket List</div>
+<table class="ticket_listing">
+<tbody>
+{% for option in occurrence.options.all %}
+	<tr>
+		<th colspan="2">{{ option.label }}</th>
+	</tr>
+	{% for purchase in option.purchase_set.all %}
+	{% ifequal purchase.occurrence occurrence %}
+	{% ifequal purchase.status 'P' %}
+	<tr>
+		<td>{{ purchase.user.email }}</td>
+		<td>
+		{% for payment in purchase.payment_set.all %}
+		{{ payment.purchaser_name }}
+		{% endfor %}
+		</td>
+	</tr>
+	{% endifequal %}
+	{% endifequal %}
+	{% endfor %}
+{% endfor %}
+</tbody>
+</table>
+<br/>
+<div class="rc_btn_01"><a href="/events/{{ occurrence.event.id }}/admin/">Back</a></div>
+{% endblock %}

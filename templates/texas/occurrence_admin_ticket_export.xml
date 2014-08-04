@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Server SYSTEM "opt/pdos/etc/pdoslrd.dtd">
+<occurrence>
+	<label>{{ occurrence }}</label>
+	<tiers>
+	{% for tier in occurrence.tier_set.all %}
+		<tier code="{{ tier.code }}">
+		<label>{{ tier.label }}</label>
+			<tickets>
+				{% for ticket in tier.ticket_set.all %}
+				{% ifequal ticket.purchase.status 'P' %}
+				<ticket number="{{ ticket.number }}">
+					<code>{{ ticket.code }}</code>
+					<user_email>{{ ticket.purchase.user.email }}</user_email>
+					<assigned_name>{{ ticket.assigned_name }}</assigned_name>
+					<purchase_date>{{ ticket.purchase.purchase_date }}</purchase_date>
+				</ticket>
+				{% endifequal %}
+				{% endfor %}
+			</tickets>
+		</tier>
+	{% endfor %}
+	</tiers>
+</occurrence>

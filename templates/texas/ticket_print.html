@@ -1,0 +1,27 @@
+<html>
+	<head>
+		<title>Print Ticket</title>
+	</head>
+	<body>
+	{% ifequal ticket.purchase.status 'P' %}
+	<div style="margin: auto; width: 640px; padding: 10px 10px 10px 10px; border: thin dotted black; text-align: center;">
+	{{ ticket.tier.occurrence.event.header|safe }}
+	<div>{{ ticket.tier }} - #<strong>{{ ticket.tier.code }}{{ ticket.number|stringformat:"05i" }}{{ ticket.code }}</strong></div>
+	<div>Purchased by: <strong>{{ ticket.assigned_name }}</strong> on {{ ticket.purchase.purchase_date }}</div>
+	<div>Price: ${{ ticket.tier.price }}
+	{% if purchase.occurrence.event.paypal_currency %}
+	({{ purchase.occurrence.event.paypal_currency }})
+	{% endif %}
+	</div>
+	<img src='/media/barcode/image.php?code={{ ticket.tier.code }}{{ ticket.number|stringformat:"05i" }}{{ ticket.code }}&style=453&type=I25&width=460&height=120&xres=3&font=5' alt="Barcode" />
+	<div>Admit One</div>
+	</div>
+	{% if ticket.purchase.occurrence.event.waiver %}
+	{% include ticket.purchase.occurrence.event.waiver %}
+	{% endif %}
+	<div style="page-break-after: always;">&nbsp;</div>
+	{% else %}
+	Purchase may not be printed until paid.
+	{% endifequal %}
+	</body>
+</html>

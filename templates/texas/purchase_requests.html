@@ -1,0 +1,16 @@
+{% extends "texas/buy.html" %}
+{% block head %}
+{% endblock %}
+{% block title %}Index{% endblock %}
+{% block content %}
+<div class="header_01"><strong>Your Purchase is not yet complete!</strong></div>
+<p>You have requested the following:</p>
+<ul>
+	{% for purchase_request in purchase_requests %}
+	<li>{{ purchase_request.tickets_requested }} tickets - ${{ purchase_request.tier.price }} each: {{ purchase_request.tier }}</li>
+	{% empty %}
+	<li>You have no pending purchase requests.  This means you either have no requested ticket purchases, or all previous requests have been processed or expired.  Please <a href="/login/">log in</a> to view your orders.</li>
+	{% endfor %}
+</ul>
+<p><a href="/login/">Click here now to log in and complete your purchase</a></p>
+{% endblock %}

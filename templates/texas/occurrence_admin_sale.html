@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block head %}
+{% endblock %}
+{% block title %}About Us{% endblock %}
+{% block content %}
+<div class="header_01">Administer {{ occurrence }} - Ticket List</div>
+{% if form.subject.errors %}
+    <ol>
+    {% for error in form.errors %}
+        <li><strong>{{ error|escape }}</strong></li>
+    {% endfor %}
+    </ol>
+{% endif %}
+<h1>{{ message }}</h1>
+
+<form method="post" name="sale_form" id="sale_form">
+<table>
+<tr>
+    <td>Tier:</td>
+    <td>
+        <select name="tier_id" id="tier_id">
+	    {% for tier in occurrence.tier_set.all %}
+	    <option value="{{ tier.id }}">{{ tier.label }}</option>
+	    {% endfor %}
+    	</select>
+    </td>
+<tr>
+    <td>{{ form.name.label_tag }}</td>
+    <td>{{ form.name }}</td>
+</tr>
+<tr>
+    <td>{{ form.email.label_tag }}</td>
+    <td>{{ form.email }}</td>
+</tr>
+<tr>
+    <td>{{ form.tickets.label_tag }}</td>
+    <td>{{ form.tickets }}</td>
+</tr>
+</table>
+
+<div class="rc_btn_01 left"><a href="#" onclick="document.sale_form.submit();">Submit</a></div>
+</form>
+
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block head %}
+{% endblock %}
+{% block title %}About Us{% endblock %}
+{% block main_menu %}
+<ul>
+    <li><a href="/"><span></span>Home</a></li>
+    <li><a href="/buy/"><span></span>Tickets</a></li>
+    <li><a href="/schedules/"><span></span>Schedule</a></li>
+    <li><a href="/about/" class="current"><span></span>About</a></li>
+    <li><a href="/contact/"><span></span>Contact</a></li>
+</ul>   
+{% endblock %}
+{% block content %}
+<div class="header_01">About Black Rock Tickets</div>
+<p>Black Rock Tickets began as a ticket system for the <a href="http://playadelfuego.org/">Playa del Fuego</a> regional <a href="http://www.burningman.com/">Burning Man</a> event.  After many attempts to use third-party ticket vendors, we decided none of their systems were as useful as the simple home-brew system we had created.  Since it's served us so well, we've decided to open up the system for other events to use, as well.</p>
+<p>While the main purpose of BRT is to make a ticket system available to other regional Burning Man events, we're happy to share it with anyone and everyone who only needs a simple elecronic ticket sales system, without the cost or hassle of the big ticket vendors.</p>
+<p>If you'd like us to host ticket sales for your event, or have a question about buying tickets here, please <a href="/contact/">let us know</a>.</p>
+<p>Black Rock Tickets is not affiliated with the Burning Man organization or Black Rock City, LLC.</p>
+<!--
+<p>If you'd like to help us cover the web hosting costs for providing this service, we're happy to accept donations.</p>
+<div style="width:20em;padding-left:10px;padding-top:10px;padding-right:10px;padding-bottom:10px;">
+	<table class="table" border="0" cellpadding="0" cellspacing="0" width="100%">
+	<tr>
+	<form action="https://authorize.payments.amazon.com/pba/paypipeline" method="post">
+	  <input type="hidden" name="immediateReturn" value="1" >
+	  <input type="hidden" name="collectShippingAddress" value="0" >
+	  <input type="hidden" name="signatureVersion" value="2" >
+	  <input type="hidden" name="signatureMethod" value="HmacSHA256" >
+	  <input type="hidden" name="accessKey" value="11SEM03K88SD016FS1G2" >
+	  <input type="hidden" name="signature" value="wIQphbaPYLpGV0WnF0vTpZorLAt9yh3GDR5Aqkemoo4=" >
+	  <input type="hidden" name="isDonationWidget" value="1" >
+	  <input type="hidden" name="description" value="Cover web hosting expenses" >
+	  <input type="hidden" name="amazonPaymentsAccountId" value="ZQTEWJDXKEXQ2332A5DQHIDFQAG9GZLRHAJM9M" >
+	  <input type="hidden" name="ipnUrl" value="http://blackrocktickets.com/donate/instantpaymentnotification" >
+	  <input type="hidden" name="returnUrl" value="http://blackrocktickets.com/donate/thanks" >
+	  <input type="hidden" name="processImmediate" value="1" >
+	  <input type="hidden" name="cobrandingStyle" value="logo" >
+	  <input type="hidden" name="abandonUrl" value="http://blackrocktickets.com/donate/ohwell" >
+	
+	<td>$&nbsp;
+	<input type="text" name="amount" size="8" 
+		value=""></td>
+	<td>&nbsp;</td>  
+	<td><input type="image" src="http://g-ecx.images-amazon.com/images/G/01/asp/beige_small_donate_withmsg_darkbg.gif" border="0"></td>
+	</form>
+	</tr>
+	</table>
+	</div>
+-->
+{% endblock %}
