@@ -273,6 +273,7 @@ class PurchaseRequest(models.Model):
     options = models.ManyToManyField(Option)
     coupon = models.ForeignKey(Coupon, blank=True, null=True)
     donation_amount = models.FloatField(blank=True, null=True)
+    queue_code = models.CharField(max_length=10, blank=True, null=True)
 
     def __unicode__(self):
         return "%s, %i" % (self.ip_address, self.tickets_requested)

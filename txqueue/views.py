@@ -26,9 +26,10 @@ from ponies import PONIES
 import string
 
 def index(request):
+    tier = None
     try:
-        tier = QueuedTier.objects.filter(
-                ends__gte=datetime.now()).order_by('starts')[0]
+        tier = QueuedTier.objects.exclude(
+                ends__lte=datetime.now()).order_by('starts')[0]
     except:
         return direct_to_template(request, 'txqueue/index.html')
 
@@ -36,8 +37,9 @@ def index(request):
     res = None
     try:
         # first from url
-        res = Reservation.objects.get(code__exact=request.GET.get('code',
-                None), finished__isnull=True)
+        res = Reservation.objects.get(queued_tier=tier,
+                code__exact=request.GET.get('code', None),
+                finished__isnull=True)
         if res.finished:
             res = None
     except:
@@ -45,8 +47,8 @@ def index(request):
     try:
         # then from cookie
         if not res and 'code' in request.COOKIES:
-            res = Reservation.objects.get(code__exact=request.COOKIES['code'],
-                    finished__isnull=True)
+            res = Reservation.objects.get(queued_tier=tier,
+                    code__exact=request.COOKIES['code'], finished__isnull=True)
         if res.finished:
             res = None
     except:
@@ -54,7 +56,7 @@ def index(request):
     try:
         # then from ip address
         if not res:
-            res = Reservation.objects.get(
+            res = Reservation.objects.get(queued_tier=tier,
                     ip_address=request.META['REMOTE_ADDR'],
                     finished__isnull=True)
         if res.finished:
@@ -68,6 +70,7 @@ def index(request):
         if starts_in < timedelta(hours=1) and not res:
             # hand out an early reservation
             res = Reservation(
+                    queued_tier=tier,
                     code=''.join(Random().sample(string.letters+string.digits,
                     10)), ip_address=request.META['REMOTE_ADDR'])
             reserved = tier.starts
@@ -75,12 +78,13 @@ def index(request):
             reserved += timedelta(seconds=randint(0, 59))
             res.reserved = reserved
             res.active = datetime.now()
+            res.user_agent = request.META['HTTP_USER_AGENT']
             res.save()
 
         starts = tier.starts + timedelta(minutes=1)
         pony = choice(PONIES)
         response = direct_to_template(request, 'txqueue/index.html', {
-            "pony": pony, "starts": starts})
+            "pony": pony, "starts": starts, "tier":tier})
         if res:
             # set reservation cookie
             max_age = max_age = 24*60*60
@@ -94,11 +98,13 @@ def index(request):
     if not res:
         # otherwise get a new one
         res = Reservation(
+                queued_tier=tier,
                 code=''.join(Random().sample(string.letters+string.digits,
                 10)), ip_address=request.META['REMOTE_ADDR'])
         reserved = datetime.now()
         reserved -= timedelta(seconds=reserved.second)
         reserved += timedelta(seconds=randint(0, 59))
+        res.user_agent = request.META['HTTP_USER_AGENT']
         res.reserved = reserved
 
     # set activity
@@ -107,19 +113,22 @@ def index(request):
     if not res.active or datetime.now() - res.active > too_recent:
         # pick a pony
         pony = choice(PONIES)
+    agent_warning = request.META['HTTP_USER_AGENT'] != res.user_agent
     res.active = datetime.now()
+    res.user_agent = request.META['HTTP_USER_AGENT']
     res.save()
 
     # get stats
     queue_expired_before = datetime.now() - timedelta(minutes=15)
     active_expired_before = datetime.now() - timedelta(minutes=30)
     # get number active in the system (started, but not finished)
-    active = Reservation.objects.exclude(started__isnull=True)\
+    active = Reservation.objects.filter(queued_tier=tier)\
+            .exclude(started__isnull=True)\
             .exclude(finished__isnull=False)\
             .exclude(active__lt=active_expired_before)\
             .count()
     # get everyone in the queue (not started)
-    queue = Reservation.objects.filter(started__isnull=True)\
+    queue = Reservation.objects.filter(queued_tier=tier, started__isnull=True)\
             .exclude(active__lt=queue_expired_before)
     in_queue = queue.count()
     # get count ahead of this user
@@ -163,7 +172,8 @@ def index(request):
             {"reservation": res, "active": active, "in_queue": in_queue,
                 "ahead": ahead, "pony": pony, "return_url": return_url,
                 "is_started": is_started, "since_start": since_start,
-                "wait_message": wait_message, "tier": tier})
+                "wait_message": wait_message, "tier": tier,
+                "agent_warning": agent_warning})
 
     # set reservation cookie
     max_age = max_age = 24*60*60
