@@ -74,6 +74,8 @@
             <p class="lead">
               {% block lead %}{% endblock %}
             </p>
+            {% block alerts %}
+            {% endblock %}
           </div>
           <div class="col-lg-4">
             {% block left_bar %}
@@ -106,6 +108,10 @@
     </div>
 
     <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <!--<script type="text/javascript" src="/media/js/jquery-ui-1.8.4.custom.min.js"></script>-->
+    <script type="text/javascript" src="/media/jquery-ui-1.11.0/jquery-ui.min.js"></script>
     <script src="/media/bs/bootstrap.min.js"></script>
+    {% block script %}
+    {% endblock %}
   </body>
 </html>

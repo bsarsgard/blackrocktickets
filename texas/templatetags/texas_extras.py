@@ -180,3 +180,7 @@ class ChartNode(template.Node):
                 ranges = "%s%i" % (range_str, value_max)
 
             return "<img src=\"http://chart.apis.google.com/chart?cht=%s&chco=1f8ec8&chd=t:%s&chds=%s,%s&chs=%s&chxt=y,x&chxl=0:|%s|1:|%s&chm=N ,000000,0,-1,11,1&chbh=15\" alt=\"Chart\" />" % (style, values, value_min, value_max, size, labels, ranges)
+
+@register.filter(name='addcss')
+def addcss(value, arg):
+    return value.as_widget(attrs={'class': arg})

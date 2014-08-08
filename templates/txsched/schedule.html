@@ -1,5 +1,5 @@
 {% extends "txsched/index.html" %}
-{% block content %}
+{% block script %}
 <script type="text/javascript">
 function sign_up(position, start_date, end_date, detail_required) {
 	$("#sign_up_position").val(position);
@@ -71,6 +71,8 @@ $(document).ready(function() {
 	$(".remove").button();
 });
 </script>
+{% endblock %}
+{% block content %}
 <div class="header_01">Schedule - {{ schedule }}</div>
 
 {% if schedule.description %}
@@ -171,10 +173,6 @@ $(document).ready(function() {
 		</div>
 	</fieldset>
 	</form>
-<!--
-	<button id="submit_sign_up">Submit</button>
-	<button id="cancel_sign_up">Cancel</button>
--->
 </div>
 <div id="remove_dialog" title="Remove Sign Up">
 	<form id="remove_form" method="post">

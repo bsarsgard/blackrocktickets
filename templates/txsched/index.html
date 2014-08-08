@@ -10,26 +10,17 @@
 </style>
 {% endblock %}
 {% block title %}Volunteer Schedules{% endblock %}
-{% block main_menu %}
-<ul>
-    <li><a href="/"><span></span>Home</a></li>
-    <li><a href="/buy/"><span></span>Tickets</a></li>
-    <li><a href="/schedules/" class="current"><span></span>Schedule</a></li>
-    <li><a href="/about/"><span></span>About</a></li>
-    <li><a href="/contact/"><span></span>Contact</a></li>
-</ul>
-{% endblock %}
+{% block banner %}Volunteer Schedules{% endblock %}
+{% block lead %}Sign up early, sign up often!{% endblock %}
 {% block left_bar %}
 {% endblock %}
 {% block content %}
-<div class="header_01">Volunteer Schedule Sign-Ups</div>
-<p>Please sign up for a volunteer shift!</p>
 {% for sign_up in sign_ups %}
-<div class="header_02">{{ sign_up.occurrence }}</div>
-<ul class="category_list">
-{% for schedule in sign_up.schedules.all %}
-<li><a href="{{ schedule.id }}/{{ sign_up.id }}/">{{ schedule }}</a></li>
-{% endfor %}
-</ul>
+<h2>{{ sign_up.occurrence }}</h2>
+<div class="list-group">
+  {% for schedule in sign_up.schedules.all %}
+  <a class="list-group-item" href="{{ schedule.id }}/{{ sign_up.id }}/">{{ schedule }}</a>
+  {% endfor %}
+</div>
 {% endfor %}
 {% endblock %}

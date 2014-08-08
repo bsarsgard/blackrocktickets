@@ -104,6 +104,14 @@
               <div class="progress-bar" style="width: {{ ahead|rpct:in_queue }}%"></div>
             </div>
             <p>This is for funsies only, and may shift up or down as people come in and out of the queue. Don't freak out, ok?</p>
+            <div class="list-group">
+                <a href="http://playadelfuego.org/ticketsfaq" target="_blank" class="list-group-item">
+                  Have questions about how all this works.. check out the ticketing FAQ on the website
+                </a>
+                <a href="http://tickets.playadelfuego.org/schedules/" target="_blank" class="list-group-item">
+                  Click here to sign up for a volunteer shift while you wait
+                </a>
+            </div>
           </div>
           {% if ahead > tier.cap|sub:tier.ticket_count_paid|sub:tier.ticket_count_finished|sub:tier.ticket_count_started %}
           <div class="col-lg-6">

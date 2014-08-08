@@ -1,6 +1,10 @@
 {% extends "base.html" %}
+{% load texas_extras %}
 
-{% block content %}
+{% block title %}Login{% endblock %}
+{% block banner %}Login and Registration{% endblock %}
+{% block lead %}Login with an existing account, register a new account, or reset password{% endblock %}
+{% block script %}
 <script type="text/javascript">
 function validate(form_id, email) {
    var reg = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/;
@@ -17,96 +21,91 @@ $(document).ready(function() {
 	$("#login_tabs").tabs();
 });
 </script>
+{% endblock %}
+{% block alerts %}
 {% if message %}
-<script type="text/javascript">
-$(function() {
-        $("#dialog").dialog("destroy");
-        $("#dialog-error").dialog({
-                modal: true,
-                buttons: {
-                        Ok: function() {
-                                $(this).dialog('close');
-                        }
-                }
-        });
-});
-</script>
-
-<div id="dialog-error" title="Login Message">
-        <p>
-                {{ message }}
-        </p>
+<div class="alert alert-dismissable alert-danger">
+  <button type="button" class="close" data-dismiss="alert">×</button>
+  <strong>Error: </strong>{{ message }}
 </div>
 {% endif %}
-{% if form.subject.errors %}
-    <ol>
-    {% for error in form.errors %}
-        <li><strong>{{ error|escape }}</strong></li>
-    {% endfor %}
-    </ol>
-{% endif %}
+{% for error in form.errors %}
+<div class="alert alert-dismissable alert-danger">
+  <button type="button" class="close" data-dismiss="alert">×</button>
+  <strong>Error: </strong>{{ error|escape }}
+</div>
+{% endfor %}
+{% endblock %}
 
-<div id="login_container" style="height: 350px;">
-<div id="login_tabs">
-<ul>
-	<li><a href="#login_tabs_login">Login</a></li>
-	<li><a href="#login_tabs_new">Register New User</a></li>
-	<li><a href="#login_tabs_forgot">Forgot Password</a></li>
-</ul>
-<div id="login_tabs_login">
-<form method="post" name="form_login" id="form_login" action="/login/">
-<p>Please enter your email address password and click "Login."</p>
-<input type="hidden" name="login_is_new" id="login_is_new" value="0" />
-<table>
-<tr>
-    <td>{{ form.username.label_tag }}</td>
-    <td>{{ form.username }}</td>
-</tr>
-<tr>
-    <td>{{ form.password.label_tag }}</td>
-    <td>{{ form.password }}</td>
-</tr>
-</table>
-
-<div class="rc_btn_01_l"><a href="#" onclick="document.form_login.submit();">Login</a></div>
-<br/><br/><br/>
-</form>
+{% block content %}
+<div class="panel panel-primary">
+  <div class="panel-heading">
+    <h3 class="panel-title">Login with an existing account ...</h3>
+  </div>
+  <div class="panel-body">
+    <form method="post" name="form_login" id="form_login" action="/login/">
+      <fieldset>
+        <legend>Please enter your email address password and click "Login."</legend>
+        <div class="form-group">
+          <input type="hidden" name="login_is_new" id="login_is_new" value="0" />
+          {{ form.username.label_tag }}
+          {{ form.username|addcss:'form-control' }}
+        </div>
+        <div class="form-group">
+          {{ form.password.label_tag }}
+          {{ form.password|addcss:'form-control' }}
+        </div>
+        <div class="form-group">
+          <button class="btn btn-default" onclick="document.form_login.submit();">Login</button>
+        </div>
+      </fieldset>
+    </form>
+  </div>
 </div>
-<div id="login_tabs_new">
-<form method="post" name="new_account" id="new_account" action="/login/">
-<p>To create a new account, enter your email address and choose a password below, then click "New Account."</p>
-<input type="hidden" name="login_is_new" id="login_is_new" value="1" />
-<table>
-<tr>
-    <td>{{ form.username.label_tag }}</td>
-    <td>{{ form.username }}</td>
-</tr>
-<tr>
-    <td>{{ form.password.label_tag }}</td>
-    <td>{{ form.password }}</td>
-</tr>
-</table>
-<em>Warning: this site is not SSL protected so password will be transmitted in plain text.  Don't do anything stupid like using the same password as your online banking.</em>
-
-<div class="rc_btn_01_l"><a href="#" onclick="if (validate('new_account', 'id_username')) { document.new_account.submit(); }">New Account</a></div>
-<br/><br/><br/>
-</form>
+<div class="panel panel-success">
+  <div class="panel-heading">
+    <h3 class="panel-title">... register a new account ...</h3>
+  </div>
+  <div class="panel-body">
+    <form method="post" name="new_account" id="new_account" action="/login/">
+      <fieldset>
+        <legend>To create a new account, enter your email address and choose a password below, then click "New Account."</legend>
+        <div class="form-group">
+          <input type="hidden" name="login_is_new" id="login_is_new" value="1" />
+          {{ form.username.label_tag }}
+          {{ form.username|addcss:'form-control' }}
+        </div>
+        <div class="form-group">
+          {{ form.password.label_tag }}
+          {{ form.password|addcss:'form-control' }}
+        </div>
+        <div class="form-group">
+          <p>Warning: this site is not SSL protected so password will be transmitted in plain text.  Don't do anything stupid like using the same password as your online banking.</p>
+          <button class="btn btn-default" onclick="if (validate('new_account', 'id_username')) { document.new_account.submit(); }">New Account</button>
+        </div>
+      </fieldset>
+    </form>
+  </div>
 </div>
-<div id="login_tabs_forgot">
-<form method="post" name="forgot" id="forgot" action="/login/">
-<p>Please enter your email address and then click "Reset" to have your password reset and sent to you.  You will then be able to change it once you've logged in.</p>
-<input type="hidden" name="login_is_new" id="login_is_new" value="2" />
-<table>
-<tr>
-    <td>{{ form.username.label_tag }}</td>
-    <td>{{ form.username }}</td>
-</tr>
-</table>
-<div class="rc_btn_01_l"><a href="#" onclick="document.forgot.submit();">Reset</a></div>
-<br/><br/><br/>
-</form>
-</div>
-</div>
+<div class="panel panel-info">
+  <div class="panel-heading">
+    <h3 class="panel-title">... or reset your password</h3>
+  </div>
+  <div class="panel-body">
+    <form method="post" name="forgot" id="forgot" action="/login/">
+      <fieldset>
+        <legend>Please enter your email address and then click "Reset" to have your password reset and sent to you.  You will then be able to change it once you've logged in.</legend>
+        <div class="form-group">
+          <input type="hidden" name="login_is_new" id="login_is_new" value="2" />
+          {{ form.username.label_tag }}
+          {{ form.username|addcss:'form-control' }}
+        </div>
+        <div class="form-group">
+          <button class="btn btn-default" onclick="document.forgot.submit();">Reset</button>
+        </div>
+      </fieldset>
+    </form>
+  </div>
 </div>
 
 {% endblock %}

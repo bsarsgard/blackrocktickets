@@ -4,29 +4,15 @@
 {% block title %}Buy Tickets{% endblock %}
 {% block banner %}Buy Tickets{% endblock %}
 {% block lead %}All Active Events{% endblock %}
-{% block content %}
+{% block alerts %}
 {% if error %}
-<script type="text/javascript">
-$(function() {
-	$("#dialog").dialog("destroy");
-	$("#dialog-error").dialog({
-		modal: true,
-		buttons: {
-			Ok: function() {
-				$(this).dialog('close');
-			}
-		}
-	});
-});
-</script>
-
-<div id="dialog-error" title="Purchase Error">
-	<p>
-		<span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>
-		{{ error }}
-	</p>
+<div class="alert alert-dismissable alert-danger">
+  <button type="button" class="close" data-dismiss="alert">×</button>
+  <strong>Error: </strong>{{ error }}
 </div>
 {% endif %}
+{% endblock %}
+{% block content %}
 {% for occurrence in occurrences %}
 {% if occurrence.get_active_tiers %}
 {{ occurrence.event.header|safe }}
@@ -34,8 +20,8 @@ $(function() {
 <ul class="category_list">
 	{% for tier in occurrence.get_active_tiers %}
 	{% if tier.password == "" or show == 'show' %}
-<form id="buy_tickets{{ tier.id }}" name="buy_tickets{{ tier.id }}" method="post">
-<input type="hidden" id="occurrence_id" name="occurrence_id" value="{{ occurrence.id }}" />
+  <form id="buy_tickets{{ tier.id }}" name="buy_tickets{{ tier.id }}" method="post">
+  <input type="hidden" id="occurrence_id" name="occurrence_id" value="{{ occurrence.id }}" />
 	<h3>{{ tier.label }}:</h3></h3>
 	{{ tier.description|safe }}
 	{% if tier.use_queue and not code %}
@@ -90,8 +76,8 @@ $(function() {
 	<strong>This tier is currently Sold Out.</strong>
 	{% endifnotequal %}
 	{% endif %}
-</form>
-<br/>
+  </form>
+  <br/>
 	{% endif %}
 	{% endfor %}
 </ul>
@@ -101,15 +87,20 @@ $(function() {
 <div class="cleaner"></div>        
 {% else %}
 {% if occurrence.get_future_tiers %}
-<h2>{{ occurrence }}</h2>
+<div class="row">
+  <div class="col-lg-12">
+    <h1 class="page-header">{{ occurrence }}</h1>
+  </div>
+</div>
 <p class="lead">Please check back later for the following ticket sales:</p>
-<ul>
+<div class="list-group">
 {% for tier in occurrence.get_future_tiers %}
-<li><h4>{{ tier.label }}</h4>
-<p>{{ tier.start_date|date:"D, d M Y, P" }} ({{ tier.start_date|timeuntil }})<br/>&nbsp;&nbsp;&nbsp;&nbsp;{{ tier.cap|default_if_none:"Unlimited" }} tickets - ${{ tier.price }}</p>
-</li>
+  <div class="list-group-item">
+    <h4 class="list-group-item-heading">{{ tier.label }}</h4>
+    <p class="list-group-item-text">{{ tier.start_date|date:"D, d M Y, P" }} ({{ tier.start_date|timeuntil }})<br/>&nbsp;&nbsp;&nbsp;&nbsp;{{ tier.cap|default_if_none:"Unlimited" }} tickets - ${{ tier.price }}</p>
+  </div>
 {% endfor %}
-</ul>
+</div>
 {% endif %}
 {% endif %}
 {% endfor %}
