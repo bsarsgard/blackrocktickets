@@ -1,16 +1,9 @@
 {% extends "base.html" %}
 {% block head %}
 {% endblock %}
-{% block title %}Index{% endblock %}
-{% block main_menu %}
-<ul>
-    <li><a href="/"><span></span>Home</a></li>
-    <li><a href="/buy/" class="current"><span></span>Tickets</a></li>
-    <li><a href="/schedules/"><span></span>Schedule</a></li>
-    <li><a href="/about/"><span></span>About</a></li>
-    <li><a href="/contact/"><span></span>Contact</a></li>
-</ul>   
-{% endblock %}
+{% block title %}Buy Tickets{% endblock %}
+{% block banner %}Buy Tickets{% endblock %}
+{% block lead %}All Active Events{% endblock %}
 {% block content %}
 {% if error %}
 <script type="text/javascript">
@@ -108,12 +101,13 @@ $(function() {
 <div class="cleaner"></div>        
 {% else %}
 {% if occurrence.get_future_tiers %}
-<h2>Sales for this event have not yet begun.  Please check back later for the following ticket sales:</h2>
-
-<!--<h1><a href="http://ec2-184-72-162-180.compute-1.amazonaws.com/">Please proceed to the queue to get ready for round 2:</a></h1>-->
+<h2>{{ occurrence }}</h2>
+<p class="lead">Please check back later for the following ticket sales:</p>
 <ul>
 {% for tier in occurrence.get_future_tiers %}
-<li><strong>{{ tier }}</strong>: {{ tier.start_date|date:"D, d M Y, P" }} ({{ tier.start_date|timeuntil }})<br/>&nbsp;&nbsp;&nbsp;&nbsp;{{ tier.cap|default_if_none:"Unlimited" }} tickets - ${{ tier.price }}</li>
+<li><h4>{{ tier.label }}</h4>
+<p>{{ tier.start_date|date:"D, d M Y, P" }} ({{ tier.start_date|timeuntil }})<br/>&nbsp;&nbsp;&nbsp;&nbsp;{{ tier.cap|default_if_none:"Unlimited" }} tickets - ${{ tier.price }}</p>
+</li>
 {% endfor %}
 </ul>
 {% endif %}

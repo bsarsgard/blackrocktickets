@@ -16,8 +16,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from django.db.models import Sum
 from django.views.generic.simple import direct_to_template, redirect_to
-from tickets.txqueue.models import Reservation, QueuedTier
+from django.shortcuts import redirect
+from tickets.txqueue.models import Reservation, QueuedTier, ChatMessage
 from random import Random, choice, randint
 from datetime import datetime, timedelta
 from django.conf import settings
@@ -64,6 +66,18 @@ def index(request):
     except:
         pass
 
+    if res and 'message' in request.POST and 'nick' in request.POST:
+        if (res.nick != request.POST['nick']):
+            res.nick = request.POST['nick']
+            res.save()
+        if len(request.POST['message']) > 0:
+            message = ChatMessage(reservation=res,
+                    message = request.POST['message'],
+                    stamp = datetime.now())
+            message.save()
+        return redirect('/q/?code=%s#chat' % (res.code))
+    chatmessages = ChatMessage.objects.order_by('-stamp')[:10]
+
     if tier.starts > datetime.now():
         # queue has not started
         starts_in = tier.starts - datetime.now()
@@ -79,12 +93,14 @@ def index(request):
             res.reserved = reserved
             res.active = datetime.now()
             res.user_agent = request.META['HTTP_USER_AGENT']
+            res.nick = res.ip_address
             res.save()
 
         starts = tier.starts + timedelta(minutes=1)
         pony = choice(PONIES)
         response = direct_to_template(request, 'txqueue/index.html', {
-            "pony": pony, "starts": starts, "tier":tier})
+            "pony": pony, "starts": starts, "tier": tier,
+            "reservation": res, "chatmessages": chatmessages})
         if res:
             # set reservation cookie
             max_age = max_age = 24*60*60
@@ -105,14 +121,18 @@ def index(request):
         reserved -= timedelta(seconds=reserved.second)
         reserved += timedelta(seconds=randint(0, 59))
         res.user_agent = request.META['HTTP_USER_AGENT']
+        res.nick = res.ip_address
         res.reserved = reserved
 
     # set activity
+    """
     pony = None
     too_recent = timedelta(seconds=10)
     if not res.active or datetime.now() - res.active > too_recent:
         # pick a pony
         pony = choice(PONIES)
+    """
+    pony = choice(PONIES)
     agent_warning = request.META['HTTP_USER_AGENT'] != res.user_agent
     res.active = datetime.now()
     res.user_agent = request.META['HTTP_USER_AGENT']
@@ -141,6 +161,7 @@ def index(request):
         if res in ready:
             res.is_ready = 1
             res.save()
+            update_stats(res.queuedtier)
 
     since_start = datetime.now() - res.reserved
     min_since = timedelta(minutes=1)
@@ -173,7 +194,7 @@ def index(request):
                 "ahead": ahead, "pony": pony, "return_url": return_url,
                 "is_started": is_started, "since_start": since_start,
                 "wait_message": wait_message, "tier": tier,
-                "agent_warning": agent_warning})
+                "agent_warning": agent_warning, "chatmessages": chatmessages})
 
     # set reservation cookie
     max_age = max_age = 24*60*60
@@ -189,6 +210,7 @@ def check_code(request, code):
         if reservation and reservation.is_ready and not reservation.finished:
             reservation.started = datetime.now()
             reservation.save()
+            update_stats(reservation.queuedtier)
             return direct_to_template(request, 'txqueue/return.txt', {'code':
                 1})
         else:
@@ -199,10 +221,13 @@ def check_code(request, code):
 
 def use_code(request, code):
     try:
+        tix = request.GET.get('tix', None)
         reservation = Reservation.objects.get(code__exact=code)
         if reservation and reservation.is_ready and not reservation.finished:
             reservation.finished = datetime.now()
+            reservation.tickets = tix
             reservation.save()
+            update_stats(reservation.queuedtier)
             return direct_to_template(request, 'txqueue/return.txt',
                     {'code': 1})
         else:
@@ -210,3 +235,32 @@ def use_code(request, code):
                 0})
     except:
         return direct_to_template(request, 'txqueue/return.txt', {'code': 0})
+
+def pay_code(request, code):
+    try:
+        reservation = Reservation.objects.get(code__exact=code)
+        if reservation and reservation.is_ready and not reservation.paid:
+            reservation.paid = datetime.now()
+            reservation.save()
+            update_stats(reservation.queuedtier)
+            return direct_to_template(request, 'txqueue/return.txt',
+                    {'code': 1})
+        else:
+            return direct_to_template(request, 'txqueue/return.txt', {'code':
+                0})
+    except:
+        return direct_to_template(request, 'txqueue/return.txt', {'code': 0})
+
+def update_stats(tier):
+    tier.ticket_count_paid = tier.reservation_set.filter(
+            paid__isnull=False).aggregate(Sum('tickets'))
+    tier.average_tickets = float(tier.reservation_set.filter(
+            paid__isnull=False).count()) / float(tier.ticket_count_paid)
+    tier.ticket_count_ready = tier.reservation_set.filter(is_ready=1).exclude(
+            started__isnull=False).count() * tier.average_tickets
+    tier.ticket_count_started = tier.reservation_set.filter(
+            started__isnull=False).exclude(
+            finished__isnull=False).count() * tier.average_tickets
+    tier.ticket_count_finished = tier.reservation_set.filter(
+            finished__isnull=False).exclude(
+            paid__isnull=False).count() * tier.average_tickets

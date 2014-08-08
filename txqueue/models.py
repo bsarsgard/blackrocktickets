@@ -46,3 +46,9 @@ class Reservation(models.Model):
     finished = models.DateTimeField(null=True, blank=True)
     paid = models.DateTimeField(null=True, blank=True)
     tickets = models.IntegerField(null=True)
+    nick = models.CharField(max_length=64)
+
+class ChatMessage(models.Model):
+    reservation = models.ForeignKey(Reservation)
+    stamp = models.DateTimeField()
+    message = models.CharField(max_length=256)

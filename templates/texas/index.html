@@ -1,63 +1,77 @@
 {% extends "base.html" %}
 {% block head %}
 {% endblock %}
-{% block title %}Index{% endblock %}
+{% block title %}Home{% endblock %}
+{% block banner %}Home{% endblock %}
+{% block lead %}Upcoming Events{% endblock %}
 {% block content %}
 {% for event in events %}
-{% if event.id != 3 %}
-{{ event.header|safe }}
-<div class="header_01">{{ event.label }}</div>
-<p>{{ event.description|safe }}</p>
-{% for occurrence in event.get_active_occurrences %}
-<p>{{ occurrence.description|safe }}</p>
-<p>Please email <a href="mailto:{{ event.admin_email }}">{{ event.admin_email }}</a> for more information.</a>
-{% if occurrence.cap %}
-<!--<p>Event ticket cap: {{ occurrence.cap }}</p>-->
-{% endif %}
-<ul class="category_list">
-	{% for tier in occurrence.get_past_tiers %}
-	{% ifequal tier.password "" %}
-	<li style="color: black;">{{ tier.label }}: {{ tier.start_date|date:"D d M Y" }} - {{ tier.end_date|date:"d M" }}
-	{% ifequal tier.get_tickets_available 0 %}
-	<strong> *Sold Out*</strong>
-	{% else %}
-	<strong> *Ended*</strong>
-	{% endifequal %}
-	</li>
-	{% endifequal %}
-	{% endfor %}
+<div class="row">
+  <div class="col-lg-12">
+    <h1 class="page-header">{{ event.label }}</h1>
+  </div>
+</div>
+<div class="row">
+  <a id="event-{{ event.id }}"></a>
+  <div class="col-lg-6">
+    <p>{{ event.description|safe }}</p>
+    {% for occurrence in event.get_active_occurrences %}
+    <p>{{ occurrence.description|safe }}</p>
+    <p>Please email <a href="mailto:{{ event.admin_email }}">{{ event.admin_email }}</a> for more information.</a>
+    <div class="list-group">
+      {% for tier in occurrence.get_past_tiers %}
+      {% ifequal tier.password "" %}
+      <div href="#event-{{ event.id }}" class="list-group-item disabled">
+        <h4 class="list-group-item-heading">{{ tier.label }}</h4>
+        <p class="list-group-item-text">{{ tier.start_date|date:"D d M Y" }} - {{ tier.end_date|date:"d M" }}
+          {% ifequal tier.get_tickets_available 0 %}
+          <strong> *Sold Out*</strong>
+          {% else %}
+          <strong> *Ended*</strong>
+          {% endifequal %}
+        </p>
+      </div>
+      {% endifequal %}
+      {% endfor %}
 
-	{% for tier in occurrence.get_active_tiers %}
-	{% ifequal tier.password "" %}
-	<li style="font-weight: bold; color: lime;">{{ tier.label }}: {{ tier.start_date|date:"D d M Y" }} - {{ tier.end_date|date:"d M" }}
-	{% ifequal tier.get_tickets_available 0 %}
-	<strong> *Sold Out*</strong>
-	{% else %}
-	{% if tier.use_queue %}
-	<strong> *Queue Open Now*</strong>
-	{% else %}
-	<strong> *Open Now*</strong>
-	{% endif %}
-	{% endifequal %}
-	</li>
-	{% endifequal %}
-	{% endfor %}
+      {% for tier in occurrence.get_active_tiers %}
+      {% ifequal tier.password "" %}
+      <a href="{% ifequal tier.get_tickets_available 0 %}#event-{{ event.id }}{% else %}/buy/{{ occurrence.id }}/{% endifequal %}" class="list-group-item active">
+        <h4 class="list-group-item-heading">{{ tier.label }}</h4>
+        <p class="list-group-item-text">{{ tier.start_date|date:"D d M Y" }} - {{ tier.end_date|date:"d M" }}
+          {% ifequal tier.get_tickets_available 0 %}
+          <strong> *Sold Out*</strong>
+          {% else %}
+          {% if tier.use_queue %}
+          <strong> *Queue Open Now*</strong>
+          {% else %}
+          <strong> *Open Now*</strong>
+          {% endif %}
+          {% endifequal %}
+        </p>
+      </a>
+      {% endifequal %}
+      {% endfor %}
 
-	{% for tier in occurrence.get_future_tiers %}
-	{% ifequal tier.password "" %}
-	<li><strong>{{ tier.label }}</strong>: {{ tier.start_date|date:"D, d M Y, P" }} ({{ tier.start_date|timeuntil }})<br/>&nbsp;&nbsp;&nbsp;&nbsp;{{ tier.cap|default_if_none:"Unlimited" }} tickets - ${{ tier.price }}
-	</li>
-	{% endifequal %}
-	{% endfor %}
-</ul>
-{% if occurrence.get_active_tiers %}
-<div class="rc_btn_01"><a href="/buy/{{ occurrence.id }}/">Buy Tickets</a></div>
-{% endif %}
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<hr/>
-<div class="cleaner"></div>        
+      {% for tier in occurrence.get_future_tiers %}
+      {% ifequal tier.password "" %}
+      <div class="list-group-item">
+        <h4 class="list-group-item-heading">{{ tier.label }}</h4>
+        <p class="list-group-item-text">
+          {{ tier.start_date|date:"D d M Y" }} ({{ tier.start_date|timeuntil }})<br/>&nbsp;&nbsp;&nbsp;&nbsp;{{ tier.cap|default_if_none:"Unlimited" }} tickets - ${{ tier.price }}
+        </p>
+      </div>
+      {% endifequal %}
+      {% endfor %}
+    </div>
+    {% if occurrence.get_active_tiers %}
+    <div class="rc_btn_01"><a href="/buy/{{ occurrence.id }}/">Buy Tickets</a></div>
+    {% endif %}
+  </div>
+  <div class="col-lg-6">
+    {{ event.header|safe }}
+  </div>
+</div>
 {% endfor %}
-{% endif %}
 {% endfor %}
 {% endblock %}

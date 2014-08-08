@@ -338,9 +338,6 @@ said food stuffs with them after bathing.
 The True Experience of a Burn comes from being Pro-Active. The more you give
 the more you will receive. End quote.
 ""","""
-Barzuski family members are reminded it is Pop Pop's big birthday this year.
-Don't forget him on his special day.
-""","""
 When you show up at the front Ticketing gate make sure you have your ticket, a
 valid i.d. and oodles of giddy excitement.
 ""","""

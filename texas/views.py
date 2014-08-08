@@ -255,17 +255,20 @@ def buy(request):
         for occurrence in occurrences:
             for tier in occurrence.tier_set.all():
                 foo = tier.get_ticket_range()
-        code = request.GET.get('code', None)
-        if not code:
-            # check for code in session
-            if 'code' in request.COOKIES:
-                code = request.COOKIES['code']
-                if not check_queue_code(code):
-                    # if it's bad, ignore it
-                    code = None
-        if code and not check_queue_code(code):
-            return direct_to_template(request, 'texas/error.html',
-                {'message': "Invalid queue code!"})
+        code = None
+        need_code = False
+        for occurrence in occurrences:
+            for tier in occurrence.get_active_tiers():
+                if tier.use_queue:
+                    need_code = True
+                    break
+            if need_code:
+                break
+        if need_code:
+            code = get_code(request)
+            if code and not check_queue_code(code):
+                return direct_to_template(request, 'texas/error.html',
+                    {'message': "Invalid queue code!"})
         response = direct_to_template(request, 'texas/buy.html', {'occurrences':
             occurrences, 'code': code, 'queue_url': settings.QUEUE_URL,
             'show': show})
@@ -277,6 +280,17 @@ def buy(request):
             response.set_cookie('code', code, max_age, expires)
         return response
 
+def get_code(request):
+    code = request.GET.get('code', None)
+    if not code:
+        # check for code in session
+        if 'code' in request.COOKIES:
+            code = request.COOKIES['code']
+            if not check_queue_code(code):
+                # if it's bad, ignore it
+                code = None
+    return code
+
 def buy_occurrence(request, occurrence_id):
     occurrences = Occurrence.objects.filter(pk=occurrence_id)
     if request.method == 'POST':
@@ -285,14 +299,17 @@ def buy_occurrence(request, occurrence_id):
     else:
         # loading form
         show = request.GET.get('show', '')
-        code = request.GET.get('code', None)
-        if not code:
-            # check for code in session
-            if 'code' in request.COOKIES:
-                code = request.COOKIES['code']
-                if not check_queue_code(code):
-                    # if it's bad, ignore it
-                    code = None
+        code = None
+        need_code = False
+        for occurrence in occurrences:
+            for tier in occurrence.get_active_tiers():
+                if tier.use_queue:
+                    need_code = True
+                    break
+            if need_code:
+                break
+        if need_code:
+            code = get_code(request)
         if code and not check_queue_code(code):
             return direct_to_template(request, 'texas/error.html',
                 {'message': "Invalid queue code!"})
@@ -308,15 +325,23 @@ def buy_occurrence(request, occurrence_id):
         return response
 
 def check_queue_code(code):
-    f = urlopen("%s/check/%s/" % (settings.QUEUE_URL, code))
+    f = urlopen("%s/check/%s" % (settings.QUEUE_URL, code))
     response = f.read().rstrip("\n")
     if response == '1':
         return True
     else:
         return False
 
-def use_queue_code(code):
-    f = urlopen("%s/use/%s/" % (settings.QUEUE_URL, code))
+def use_queue_code(code, tickets):
+    f = urlopen("%s/use/%s?tix=%i" % (settings.QUEUE_URL, code, tickets))
+    response = f.read().rstrip("\n")
+    if response == '1':
+        return True
+    else:
+        return False
+
+def pay_queue_code(code):
+    f = urlopen("%s/pay/%s" % (settings.QUEUE_URL, code))
     response = f.read().rstrip("\n")
     if response == '1':
         return True
@@ -384,7 +409,7 @@ def do_buy(request, occurrences):
                                 {'occurrences': occurrences,
                                 'error': 'Incorrect password!', 'code': code})
                 if tier.use_queue and code:
-                    if not use_queue_code(code):
+                    if not use_queue_code(code, tickets_requested):
                         return direct_to_template(request, 'texas/error.html',
                                 {'message': "Invalid queue code!"})
                 total_tickets += tickets_requested
@@ -395,7 +420,8 @@ def do_buy(request, occurrences):
                         ip_address=ip_address,
                         tickets_requested=tickets_requested,
                         request_date=request_date,
-                        expiration_date=expiration_date, coupon=coupon)
+                        expiration_date=expiration_date, coupon=coupon,
+                        queue_code=code)
                 # add donation if present
                 #donation_amount = request.POST.get("donation_%i" % tier.id, "")
                 donation_amount = ""
@@ -687,6 +713,10 @@ def paypal_process(request, purchase_id):
                 ticket.set_code()
                 ticket.set_number()
             do_send_purchase_confirmation(purchase)
+        # update queue
+        for purchaserequest in purchase.purchaserequest_set.all():
+            if purchaserequest.code:
+                pay_queue_code(purchaserequest.code)
         return redirect_to(request, "/buy/purchases/receipt/%i/" % purchase.id)
     else:
         return direct_to_template(request, 'texas/error.html',
