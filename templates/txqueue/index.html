@@ -4,17 +4,6 @@
     <title>Ticket Queue{% if ahead %} - {{ ahead }}{% endif %}</title>
     <link rel="stylesheet" href="/media/bs/amelia/bootstrap.min.css" media="screen">
     <link rel="stylesheet" href="/media/bs/bootswatch.min.css" media="screen">
-    <script language="javascript">
-    function countdown() {
-      var cd = document.getElementById('countdown');
-      var count = parseInt(cd.innerHTML);
-      count -= 1;
-      if (count > 0) {
-        cd.innerHTML = count;
-        setTimeout("countdown();", 1000);
-      }
-    }
-    </script>
   </head>
   <body>
     <div class="navbar navbar-default navbar-fixed-top">
@@ -29,9 +18,13 @@
         </div>
         <div id="navbar-main" class="navbar-collapse collapse">
           <ul class="nav navbar-nav navbar-right">
+            {% if reservation %}
             <li>
-                <a href="#" onclick="cornify_add();return false;"><img src="http://www.cornify.com/assets/cornifybig.gif" alt="Cornify" border="0" height="25" width="82"></a>
-                <script type="text/javascript" src="http://www.cornify.com/js/cornify.js"></script>
+              <a href="#chat">Chat</a>
+            </li>
+            {% endif %}
+            <li>
+              <a href="http://www.cornify.com" onclick="cornify_add();return false;"><img src="http://www.cornify.com/assets/cornify.gif" width="61" height="16" border="0" alt="Cornify" style="margin-top: 2px; margin-bottom: 2px;" /></a><script type="text/javascript" src="http://www.cornify.com/js/cornify.js"></script>
             </li>
           </ul>
         </div>
@@ -39,257 +32,299 @@
     </div>
 
     {% if tier %}
-      {% if tier.ticket_count_paid >= tier.cap %}
-        <div class="container">
-          <div class="row">
-            <div class="col-lg-8 col-md-7 col-sm-6">
-              <div class="page-header" id="banner">
-                <h1>Sorry, sold out</h1>
-                <p class="lead">Ticket sales have ended</p>
+    {% if tier.ticket_count_paid >= tier.cap %}
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-8 col-md-7 col-sm-6">
+          <div class="page-header" id="banner">
+            <h1>Sorry, sold out</h1>
+            <p class="lead">Ticket sales have ended</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% else %}{# tier.ticket_count_paid >= tier.cap #}
+    {% if tier.ticket_count_paid|add:tier.ticket_count_finished|add:tier.ticket_count_started >= tier.cap %}
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-8 col-md-7 col-sm-6">
+          <div class="page-header" id="banner">
+            <h1>Queue is closing down</h1>
+            <p class="lead">There may be tickets in the next 15 minutes from  expired unpaid orders, so it couldn't hurt to check back at <a href="{{ tier.url }}">The Ticket Sales Site</a> and give it a try.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% else %}{# tier.ticket_count_finished >= tier.cap #}
+    <div class="container">
+      {% if starts %}
+      <div class="page-header" id="banner">
+        <div class="row">
+          <div class="col-lg-12">
+            <h1>{{ tier.name }}</h1>
+            <p class="lead">The ticket queue will open in {{ starts|timeuntil }}</p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-lg-12">
+            <h3><em>Hold onto your butts.</em></h3>
+            <p>This page will automatically refresh in <span class="badge" id="countdown">30</span> seconds if javascript is enabled.
+          </div>
+        </div>
+      </div>
+      {% else %}{# starts #}
+      <div class="page-header" id="banner">
+        <div class="row">
+          <div class="col-lg-12">
+            <h1>{{ tier.name }}</h1>
+          </div>
+        </div>
+        {% if agent_warning %}
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="bs-component">
+              <div class="alert alert-warning">
+                <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <strong>WARNING: Duplicate requests detected!</strong>
+                <p>It looks like you have more than one device or web browser connecting from the same IP address. The ticket queue will only allow one entry per household, so you must turn off any additional devices connected to the queue or you may be denied access to the ticket system.</p>
               </div>
             </div>
           </div>
         </div>
-      {% else %}{# tier.ticket_count_paid >= tier.cap #}
-        {% if tier.ticket_count_paid|add:tier.ticket_count_finished|add:tier.ticket_count_started >= tier.cap %}
-          <div class="container">
-            <div class="row">
-              <div class="col-lg-8 col-md-7 col-sm-6">
-                <div class="page-header" id="banner">
-                  <h1>Queue is closing down</h1>
-                  <p class="lead">There may be tickets in the next 15 minutes from  expired unpaid orders, so it couldn't hurt to check back at <a href="{{ tier.url }}">The Ticket Sales Site</a> and give it a try.</p>
-                </div>
+        {% endif %}{# agent_warning #}
+        <div class="row">
+          {% if is_started %}
+          <div class="col-lg-6">
+            <h2>You are number <strong>{{ ahead }}</strong> of <strong>{{ in_queue }}</strong></h2>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-lg-6">
+            <div class="progress progress-striped active">
+              <div class="progress-bar" style="width: {{ ahead|rpct:in_queue }}%"></div>
+            </div>
+            <p>This is for funsies only, and may shift up or down as people come in and out of the queue. Don't freak out, ok?</p>
+          </div>
+          {% if ahead > tier.cap|sub:tier.ticket_count_paid|sub:tier.ticket_count_finished|sub:tier.ticket_count_started %}
+          <div class="col-lg-6">
+            <div class="bs-component">
+              <div class="alert alert-dismissable alert-danger">
+                <strong>It is EXTREMELY UNLIKELY that you will get a ticket today.</strong>
+                <p>Even if everyone purchases just 1 ticket, sales will still be over by the time your turn comes around. Your best bet is to wait for the queue to close, then try to grab any unpaid orders that expire.</p>
               </div>
             </div>
           </div>
-        {% else %}{# tier.ticket_count_finished >= tier.cap #}
-          <div class="container">
-            {% if reservation %}
-              <div class="page-header" id="banner">
-                <div class="row">
-                  <div class="col-lg-12">
-                    <h1>{{ tier.name }}</h1>
-                  </div>
-                </div>
-              {% if agent_warning %}
-                <div class="row">
-                  <div class="col-lg-12">
-                    <div class="bs-component">
-                      <div class="alert alert-dismissable alert-warning">
-                        <strong>WARNING: Duplicate requests detected!</strong>
-                        <p>It looks like you have more than one device or web browser connecting from the same IP address. The ticket queue will only allow one entry per household, so you must turn off any additional devices connected to the queue or you may be denied access to the ticket system.</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              {% endif %}
-              <div class="row">
-                <div class="col-lg-6">
-                  <h2>You are number <strong>{{ ahead }}</strong> of <strong>{{ in_queue }}</strong></h2>
-                </div>
+          {% else %}{% if ahead < tier.cap|sub:tier.ticket_count_paid|sub:tier.ticket_count_finished|sub:tier.ticket_count_started|div:tier.max_tickets %}
+          <div class="col-lg-6">
+            <div class="bs-component">
+              <div class="alert alert-dismissable alert-success">
+                <strong>It is EXTREMELY LIKELY that you will get a ticket today.</strong>
+                <p>Even if everyone buys the max of {{ tier.max_tickets }} tickets, there will still be tickets left when your turn in the queue comes around.</p>
               </div>
-              <div class="row">
-                <div class="col-lg-6">
-                  <div class="progress progress-striped active">
-                    <div class="progress-bar" style="width: {{ ahead|rpct:in_queue }}%"></div>
-                  </div>
-                  <p>This is for funsies only, and may shift up or down as people come in and out of the queue. Don't freak out, ok?</p>
-                </div>
-              {% if is_started %}
-                {% if ahead > tier.cap|sub:tier.ticket_count_paid|sub:tier.ticket_count_finished|sub:tier.ticket_count_started %}
-                  <div class="col-lg-6">
-                    <div class="bs-component">
-                      <div class="alert alert-dismissable alert-danger">
-                        <strong>It is EXTREMELY UNLIKELY that you will get a ticket today.</strong>
-                        <p>Even if everyone purchases just 1 ticket, sales will still be over by the time your turn comes around. Your best bet is to wait for the queue to close, then try to grab any unpaid orders that expire.</p>
-                      </div>
-                    </div>
-                  </div>
-                {% else %}
-                  {% if ahead < tier.cap|sub:tier.ticket_count_paid|sub:tier.ticket_count_finished|sub:tier.ticket_count_started|div:tier.max_tickets %}
-                    <div class="col-lg-6">
-                      <div class="bs-component">
-                        <div class="alert alert-dismissable alert-success">
-                          <strong>It is EXTREMELY LIKELY that you will get a ticket today.</strong>
-                          <p>Even if everyone buys the max of {{ tier.max_tickets }} tickets, there will still be tickets left when your turn in the queue comes around.</p>
-                        </div>
-                      </div>
-                    </div>
-                  {% else %}
-                    {% if ahead < tier.cap|sub:tier.ticket_count_paid|sub:tier.ticket_count_finished|sub:tier.ticket_count_started|div:tier.average_tickets %}
-                      <div class="col-lg-6">
-                        <div class="bs-component">
-                          <div class="alert alert-dismissable alert-info">
-                            <strong>It is somewhat likely that you will get a ticket today.</strong>
-                            <p>If everyone buys fewer than {{ tier.cap|sub:tier.ticket_count_paid|sub:tier.ticket_count_finished|sub:tier.ticket_count_started|div:ahead }} tickets, there will still be some left when your turn comes around. This is greater than the average of {{ tier.average_tickets }}.</p>
-                          </div>
-                        </div>
-                      </div>
-                    {% else %}
-                      <div class="col-lg-6">
-                        <div class="bs-component">
-                          <div class="alert alert-dismissable alert-danger">
-                            <strong>It is somewhat unlikely that you will get a ticket today.</strong>
-                            <p>If everyone buys fewer than {{ tier.cap|sub:tier.ticket_count_paid|sub:tier.ticket_count_finished|sub:tier.ticket_count_started|div:ahead }} tickets, there will still be some left when your turn comes around. This is less than the average of {{ tier.average_tickets }}.</p>
-                          </div>
-                        </div>
-                      </div>
-                    {% endif %}
-                  {% endif %}
-                {% endif %}
-                </div>
-              {% else %}{# is_started #}
-                <div class="row">
-                  <div class="col-lg-12">
-                    <p>Queue position pending ... {{ wait_message }}</p>
-                  </div>
-                </div>
-              {% endif %}{# is_started #}
-              </div>
-              {% if reservation.is_ready %}
-                <div class="row">
-                  <div class="col-lg-12">
-                    <h2>The ticket system will see you now</h2>
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col-lg-12">
-                    <a href="{{ return_url }}/?code={{ reservation.code }}">Click here to proceed</a>
-                  </div>
-                </div>
-              {% else %}{# reservation.is_ready #}
-                <div class="row">
-                  <div class="col-lg-12">
-                    <h1>Ticket Stats and Other Lies</h1>
-                    <p>These are estimates only; move your mouse cursor over a box for more detail.</p>
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col-lg-3">
-                    <div class="bs-component">
-                      <div class="alert alert-dismissable alert-danger" data-toggle="tooltip" data-placement="top" title="" data-original-title="Number of tickets sold and paid for, so far">
-                        Paid: <span class="badge">{{ tier.ticket_count_paid }}</span> of <span class="badge">{{ tier.cap }}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-lg-3">
-                    <div class="bs-component">
-                      <div class="alert alert-dismissable alert-warning" data-toggle="tooltip" data-placement="top" title="" data-original-title="Approximate number of tickets that have reserved an order but are still awaiting payment">
-                        Finished: <span class="badge">{{ tier.ticket_count_finished }}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-lg-3">
-                    <div class="alert alert-dismissable alert-success" data-toggle="tooltip" data-placement="top" title="" data-original-title="Approximate number of tickets that have made it out of the queue but have not yet completed their order">
-                      Started: <span class="badge">{{ tier.ticket_count_started }}</span>
-                    </div>
-                  </div>
-                  <div class="col-lg-3">
-                    <div class="alert alert-dismissable alert-info" data-toggle="tooltip" data-placement="top" title="" data-original-title="Approximate number of tickets that are ready to exit the queue and purchase tickets">
-                      Ready: <span class="badge">{{ tier.ticket_count_ready }}</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col-lg-12">
-                    <div class="bs-component">
-                      <p>
-                        There are
-                        <span class="label label-info">{{ tier.cap|sub:tier.ticket_count_paid|sub:tier.ticket_count_finished|sub:tier.ticket_count_started }}</span>
-                        tickets remaining, so at an average of
-                        <span class="label label-info">{{ tier.average_tickets }}</span>
-                        tickets per purchase,
-                        <span class="label label-info">{{ tier.cap|sub:tier.ticket_count_paid|sub:tier.ticket_count_finished|sub:tier.ticket_count_started|div:tier.average_tickets }}</span>
-                        more people should get tickets.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col-lg-12">
-                    <h3>Total progress (when this bar is full of rainbows, the queue will close)</h3>
-                    <div class="progress">
-                      <div class="progress-bar progress-bar-danger" style="width: {{ tier.ticket_count_paid|pct:tier.cap }}%"></div>
-                      <div class="progress-bar progress-bar-warning" style="width: {{ tier.ticket_count_finished|pct:tier.cap }}%"></div>
-                      <div class="progress-bar progress-bar-success" style="width: {{ tier.ticket_count_started|pct:tier.cap }}%"></div>
-                      <div class="progress-bar progress-bar-info" style="width: {{ tier.ticket_count_ready|pct:tier.cap }}%"></div>
-                    </div>
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col-lg-12">
-                    <h2>Please wait</h2>
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col-lg-12">
-                    <p>This page will automatically refresh in <span id="countdown">30</span> seconds if javascript is enabled.
-                    <br/>You will not lose your place in line, so there is no need to hammer on the F5 key like a jerk.</p>
-                  </div>
-                </div>
-                <script language="javascript">
-                setTimeout("window.location = '/q/?code={{ reservation.code }}'", 30000);
-                setTimeout("countdown();", 1000);
-                </script>
-              {% endif %}{# reservation.is_ready #}
-            {% else %}{# reservation #}
-              </div>
-              <div class="row">
-                <div class="col-lg-12">
-                  <div class="page-header" id="banner">
-                    <h1>{{ tier.name }}</h1>
-                    <p class="lead">The ticket queue will open in {{ starts|timeuntil }}</p>
-                  </div>
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-lg-12">
-                  <h3><em>Hold onto your butts.</em></h3>
-                  <p>This page will automatically refresh every minute if javascript is enabled.</p>
-                  <script language="javascript">
-                  setTimeout("window.location = window.location", 60000);
-                  </script>
-                </div>
-              </div>
-            {% endif %}{# reservation #}
-            {% if pony %}
-              <div class="row">
-                <div class="col-lg-12">
-                  <div class="bs-component">
-                    <div class="jumbotron">
-                      {{ pony|safe }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            {% else %}{# pony #}
-              <div class="row">
-                <div class="col-lg-12">
-                  <h2>Seriously, dude.  What did I tell you about hammering F5?  STOP IT!</h2>
-                </div>
-              </div>
-            {% endif %}{# pony #}
+            </div>
           </div>
-        {% endif %}{# tier.ticket_count_finished >= tier.cap #}
-      {% endif %}{# tier.ticket_count_paid >= tier.cap #}
-    {% else %}{# tier #}
-      <div class="container">
-        <div class="row">
-          <div class="col-lg-8 col-md-7 col-sm-6">
-            <div class="page-header" id="banner">
-              <h1>Nothing here</h1>
-              <p class="lead">Please go away</p>
+          {% else %}{% if ahead < tier.cap|sub:tier.ticket_count_paid|sub:tier.ticket_count_finished|sub:tier.ticket_count_started|div:tier.average_tickets %}
+          <div class="col-lg-6">
+            <div class="bs-component">
+              <div class="alert alert-dismissable alert-info">
+                <strong>It is somewhat likely that you will get a ticket today.</strong>
+                <p>If everyone buys fewer than {{ tier.cap|sub:tier.ticket_count_paid|sub:tier.ticket_count_finished|sub:tier.ticket_count_started|div:ahead }} tickets, there will still be some left when your turn comes around. This is greater than the average of {{ tier.average_tickets }}.</p>
+              </div>
+            </div>
+          </div>
+          {% else %}
+          <div class="col-lg-6">
+            <div class="bs-component">
+              <div class="alert alert-dismissable alert-danger">
+                <strong>It is somewhat unlikely that you will get a ticket today.</strong>
+                <p>If everyone buys fewer than {{ tier.cap|sub:tier.ticket_count_paid|sub:tier.ticket_count_finished|sub:tier.ticket_count_started|div:ahead }} tickets, there will still be some left when your turn comes around. This is less than the average of {{ tier.average_tickets }}.</p>
+              </div>
+            </div>
+          </div>
+          {% endif %}{% endif %}{% endif %}{# ahead... #}
+          {% else %}{# is_started #}
+          <div class="col-lg-12">
+            <h2>Queue position pending ... {{ wait_message }}</h2>
+          </div>
+          {% endif %}{# is_started #}
+        </div>
+      </div>
+      {% if reservation.is_ready %}
+      <div class="row">
+        <div class="col-lg-12">
+          <h2>The ticket system will see you now</h2>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-lg-12">
+          <a href="{{ return_url }}/?code={{ reservation.code }}">Click here to proceed</a>
+        </div>
+      </div>
+      {% else %}{# reservation.is_ready #}
+      <div class="row">
+        <div class="col-lg-12">
+          <h1>Ticket Stats and Other Lies</h1>
+          <p>These are estimates only; move your mouse cursor over a box for more detail.</p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-lg-3">
+          <div class="bs-component">
+            <div class="alert alert-dismissable alert-danger" data-toggle="tooltip" data-placement="top" title="" data-original-title="Number of tickets sold and paid for, so far">
+              Paid: <span class="badge">{{ tier.ticket_count_paid }}</span> of <span class="badge">{{ tier.cap }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3">
+          <div class="bs-component">
+            <div class="alert alert-dismissable alert-warning" data-toggle="tooltip" data-placement="top" title="" data-original-title="Approximate number of tickets that have reserved an order but are still awaiting payment">
+              Finished: <span class="badge">{{ tier.ticket_count_finished }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3">
+          <div class="alert alert-dismissable alert-success" data-toggle="tooltip" data-placement="top" title="" data-original-title="Approximate number of tickets that have made it out of the queue but have not yet completed their order">
+            Started: <span class="badge">{{ tier.ticket_count_started }}</span>
+          </div>
+        </div>
+        <div class="col-lg-3">
+          <div class="alert alert-dismissable alert-info" data-toggle="tooltip" data-placement="top" title="" data-original-title="Approximate number of tickets that are ready to exit the queue and purchase tickets">
+            Ready: <span class="badge">{{ tier.ticket_count_ready }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="bs-component">
+            <p>
+              There are
+              <span class="label label-info">{{ tier.cap|sub:tier.ticket_count_paid|sub:tier.ticket_count_finished|sub:tier.ticket_count_started }}</span>
+              tickets remaining, so at an average of
+              <span class="label label-info">{{ tier.average_tickets }}</span>
+              tickets per purchase,
+              <span class="label label-info">{{ tier.cap|sub:tier.ticket_count_paid|sub:tier.ticket_count_finished|sub:tier.ticket_count_started|div:tier.average_tickets }}</span>
+              more people should get tickets.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-lg-12">
+          <h3>Total progress (when this bar is full of rainbows, the queue will close)</h3>
+          <div class="progress">
+            <div class="progress-bar progress-bar-danger" style="width: {{ tier.ticket_count_paid|pct:tier.cap }}%"></div>
+            <div class="progress-bar progress-bar-warning" style="width: {{ tier.ticket_count_finished|pct:tier.cap }}%"></div>
+            <div class="progress-bar progress-bar-success" style="width: {{ tier.ticket_count_started|pct:tier.cap }}%"></div>
+            <div class="progress-bar progress-bar-info" style="width: {{ tier.ticket_count_ready|pct:tier.cap }}%"></div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-lg-12">
+          <p>This page will automatically refresh in <span class="badge" id="countdown">30</span> seconds if javascript is enabled.
+          <br/>You will not lose your place in line, so there is no need to hammer on the F5 key like a jerk.</p>
+        </div>
+      </div>
+      {% endif %}{# reservation.is_ready #}
+      {% endif %}{# starts #}
+      {% if pony %}
+      <div class="row">
+        <div class="col-lg-12">
+          <h2><a id="chat" href="#chat"></a>Goodies</h2>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-lg-6">
+          <div class="well">
+            <form action="/q/?code={{ reservation.code }}#chat" method="post">
+              <div class="form-group">
+                <div class="input-group panel-nick">
+                  <span class="input-group-addon input-sm">Nickname</span>
+                  <input class="form-control input-sm block-countdown" type="text" name="nick" value="{{ reservation.nick }}" maxlength=64 data-toggle="tooltip" data-placement="bottom" title="Page will not refresh while your cursor is in this field">
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="input-group">
+                  <input class="form-control block-countdown" type="text" name="message" maxlength=256 data-toggle="tooltip" data-placement="bottom" title="Page will not refresh while your cursor is in this field">
+                  <span class="input-group-btn">
+                    <button class="btn btn-info" type="submit">Chat</button>
+                  </span>
+                </div>
+              </div>
+            </form>
+            <div class="list-group">
+              {% for chatmessage in chatmessages %}
+              <a href="#chat" class="list-group-item btn-chat-reply{% if chatmessage.reservation == reservation %} active{% endif %}">
+                <h4 class="list-group-item-heading">{{ chatmessage.reservation.nick }}</h4>
+                <p class="list-group-item-text">{{ chatmessage.message }}</p>
+              </a>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="bs-component">
+            <div class="well">
+              {{ pony|safe }}
             </div>
           </div>
         </div>
       </div>
+      {% endif %}{# pony #}
+    </div>
+    {% endif %}{# tier.ticket_count_finished >= tier.cap #}
+    {% endif %}{# tier.ticket_count_paid >= tier.cap #}
+    {% else %}{# tier #}
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-8 col-md-7 col-sm-6">
+          <div class="page-header" id="banner">
+            <h1>Nothing here</h1>
+            <p class="lead">Please go away</p>
+          </div>
+        </div>
+      </div>
+    </div>
     {% endif %}{# tier #}
     <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
     <script src="/media/bs/bootstrap.min.js"></script>
     <script type="text/javascript">
       $(function() {
         $("[data-toggle=tooltip]").tooltip();
+        $(".alert").alert()
       });
-    </script>
+
+      {% if reservation %}
+      $(function() {
+        $(".btn-chat-reply").click(function(evt) {
+          evt.preventDefault();
+          if ($("input[name=message]").val() == '') {
+            $("input[name=message]").val($(this).children("h4").eq(0).text() + ": ");
+            $("input[name=message]").focus();
+          }
+        });
+        setTimeout("countdown();", 1000);
+      });
+      {% endif %}{# reservation #}
+
+      function countdown() {
+        var count = parseInt($("#countdown").html());
+        if ($(".block-countdown").is(":focus")) {
+          setTimeout("countdown();", 1000);
+        } else {
+          count -= 1;
+          if (count > 0) {
+            $("#countdown").html(count);
+            setTimeout("countdown();", 1000);
+          } else {
+            if (window.location.search.indexOf('code') == -1) {
+              window.location = '/q/?code={{ reservation.code }}';
+            } else {
+              window.location.reload(false);
+            }
+          }
+        }
+      }
+      </script>
   </body>
 </html>
