@@ -313,6 +313,7 @@
       $(function() {
         $("[data-toggle=tooltip]").tooltip();
         $(".alert").alert()
+        setTimeout("countdown();", 1000);
       });
 
       {% if reservation %}
@@ -324,7 +325,6 @@
             $("input[name=message]").focus();
           }
         });
-        setTimeout("countdown();", 1000);
       });
       {% endif %}{# reservation #}
 
