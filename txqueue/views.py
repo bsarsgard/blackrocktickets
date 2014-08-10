@@ -96,8 +96,12 @@ def index(request):
             res.nick = res.ip_address
             res.save()
 
+        if res:
+            pony = choice(PONIES)
+        else:
+            pony = None
+
         starts = tier.starts + timedelta(minutes=1)
-        pony = choice(PONIES)
         response = direct_to_template(request, 'txqueue/index.html', {
             "pony": pony, "starts": starts, "tier": tier,
             "reservation": res, "chatmessages": chatmessages})
