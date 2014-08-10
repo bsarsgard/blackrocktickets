@@ -7,10 +7,10 @@ admin.autodiscover()
 urlpatterns = patterns('',
     # Example:
     # (r'^tickets/', include('tickets.foo.urls')),
-    #(r'^', include('tickets.texas.urls')),
-    #(r'^schedules/', include('tickets.txsched.urls')),
-    (r'^', include('tickets.txqueue.urls')),
-    #(r'^accounts/login/', 'tickets.texas.views.user_login'),
+    (r'^', include('tickets.texas.urls')),
+    (r'^schedules/', include('tickets.txsched.urls')),
+    (r'^q/^', include('tickets.txqueue.urls')),
+    (r'^accounts/login/', 'tickets.texas.views.user_login'),
 
     # Uncomment the admin/doc line below and add 'django.contrib.admindocs'
     # to INSTALLED_APPS to enable admin documentation:
