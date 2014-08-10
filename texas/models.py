@@ -227,6 +227,18 @@ class Purchase(models.Model):
     token = models.CharField(max_length=50, blank=True, null=True)
     options = models.ManyToManyField(Option, blank=True, null=True)
 
+    def get_status_tag(self):
+        if self.status == 'T':
+            return 'danger'
+        elif self.status == 'H':
+            return 'info'
+        elif self.status == 'P':
+            return 'success'
+        elif self.statur == 'D':
+            return 'warning'
+        else:
+            return 'default'
+
     def get_price(self):
         #price = 0.0
         #for ticket in self.ticket_set.all():

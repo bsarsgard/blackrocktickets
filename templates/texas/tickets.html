@@ -2,67 +2,79 @@
 {% load texas_extras %}
 {% block head %}
 {% endblock %}
-{% block title %}Index{% endblock %}
-{% block content %}
+{% block title %}My Tickets{% endblock %}
+{% block banner %}My Tickets{% endblock %}
+{% block lead %}Print or transfer tickets for upcoming events{% endblock %}
+{% block script %}
 <script type="text/javascript">
 function transfer(ticket_id) {
-	$("#ticket_id").val(ticket_id);
-        $("#transfer_dialog").dialog('open');
-	//alert('Ticket transfers are not available 24 hours prior to the event. Tickets must be transfered manually via print-out.');
 }
 $(document).ready(function() {
-        $("#transfer_dialog").dialog({
-                autoOpen: false,
-                modal: true,
-                width: 250,
-                buttons: {
-                        'Transfer': function() {
-                                $("#transfer_form").submit();
-                                $(this).dialog('close');
-                        },
-                        Cancel: function() {
-                                $(this).dialog('close');
-                        }
-                }
-        });
+  $(".btn-transfer").click(function(evt) {
+    $("#ticket_id").val($(this).attr("id"));
+    $("#transfer_dialog").dialog('open');
+  });
+  $("#transfer_dialog").dialog({
+    autoOpen: false,
+    width: 640,
+    buttons: {
+      'Transfer': function() {
+        $("#transfer_form").submit();
+        $(this).dialog('close');
+      },
+      Cancel: function() {
+        $(this).dialog('close');
+      }
+    }
+  });
 });
 </script>
-<div class="header_01"><strong>Your Tickets</strong></div>
-<p><a href="/buy/">Click here to buy tickets</a></p>
-{% if paid_purchases %}
-<h3>Tickets You Have Purchased</h3>
-<ul>
-	{% for purchase in paid_purchases %}
-	{% for ticket in purchase.ticket_set.all %}
-	<li>
-	{% if ticket.assigned_user %}
-	{{ ticket.purchase.occurrence }}<br/>
-	<strong>Assigned to: </strong>{{ ticket.assigned_user }}
-	{% else %}
-	<div class="rc_btn_01"><a href="/tickets/print/{{ ticket.id }}/" target="_blank">Print</a></div>
-<!--
-	<div class="rc_btn_01"><a href="#" onclick="transfer('{{ ticket.id }}');">Transfer</a></div>
--->
-	{{ ticket.purchase.occurrence }}<br/>
-	<strong>{{ ticket.tier.code }}{{ ticket.number|stringformat:"05i" }}{{ ticket.code }}</strong>
-	{% endif %}
-	</li>
-	{% endfor %}
-	{% endfor %}
-</ul>
-{% endif %}
-{% if assigned_tickets %}
-<h3>Tickets Assigned to You</h3>
-<ul>
-	{% for ticket in assigned_tickets %}
-	<li>
-	<div class="rc_btn_01"><a href="/tickets/print/{{ ticket.id }}/" target="_blank">Print</a></div>
-	{{ ticket.purchase.occurrence }}<br/>
-	<strong>{{ ticket.tier.code }}{{ ticket.number|stringformat:"05i" }}{{ ticket.code }}</strong>
-	<br/><strong>Purchaser: </strong>{{ ticket.purchase.user }}
-	{% endfor %}
-</ul>
-{% endif %}
+{% endblock %}
+{% block alerts %}
+<div class="row">
+  <div class="col-lg-12">
+    <div class="list-group">
+      {% for purchase in paid_purchases %}
+      {% for ticket in purchase.ticket_set.all %}
+      {% if ticket.assigned_user %}
+      <div class="list-group-item">
+        <h4 class="list-group-item-heading">
+          {{ ticket.purchase.occurrence }}
+          <span class="badge pull-right">{{ ticket.tier.code }}{{ ticket.number|stringformat:"05i" }}####</span>
+        </h4>
+        <p class="list-group-item-text">
+          <label class="label label-info">Assigned to: {{ ticket.assigned_user }}</span>
+        </p>
+      </div>
+      {% else %}
+      <div class="list-group-item">
+        <h4 class="list-group-item-heading">
+          {{ ticket.purchase.occurrence }}
+          <span class="badge pull-right">{{ ticket.tier.code }}{{ ticket.number|stringformat:"05i" }}{{ ticket.code }}</span>
+        </h4>
+        <p class="list-group-item-text">
+          <a href="/tickets/print/{{ ticket.id }}/" target="_blank" class="btn btn-primary btn-sm">Print</a>
+          <button class="btn btn-primary btn-sm btn-transfer pull-right" id="{{ ticket.id }}">Transfer</button>
+        </p>
+      </div>
+      {% endif %}
+      {% endfor %}
+      {% endfor %}
+      {% for ticket in assigned_tickets %}
+      <div class="list-group-item">
+        <h4 class="list-group-item-heading">
+          {{ ticket.purchase.occurrence }}
+          <span class="badge pull-right">{{ ticket.tier.code }}{{ ticket.number|stringformat:"05i" }}{{ ticket.code }}</span>
+        </h4>
+        <p class="list-group-item-text">
+          <a href="/tickets/print/{{ ticket.id }}/" target="_blank" class="btn btn-primary btn-sm">Print</a>
+          <label class="label label-info pull-right">Purchaser: {{ ticket.purchase.user }}</span>
+        </p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
 <div id="transfer_dialog" title="Transfer Ticket">
         <form id="transfer_form" method="post">
 	<input type="hidden" id="action" name="action" value="transfer" />

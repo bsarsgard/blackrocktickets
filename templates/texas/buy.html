@@ -3,7 +3,15 @@
 {% endblock %}
 {% block title %}Buy Tickets{% endblock %}
 {% block banner %}Buy Tickets{% endblock %}
-{% block lead %}All Active Events{% endblock %}
+{% block lead %}
+{% ifequal occurrences.count 1 %}
+{% for occurrence in occurrences %}
+{{ occurrence }}
+{% endfor %}
+{% else %}
+All Active Events
+{% endifequal %}
+{% endblock %}
 {% block alerts %}
 {% if error %}
 <div class="alert alert-dismissable alert-danger">
@@ -15,76 +23,99 @@
 {% block content %}
 {% for occurrence in occurrences %}
 {% if occurrence.get_active_tiers %}
-{{ occurrence.event.header|safe }}
-<div class="header_01">{{ occurrence }}</div>
-<ul class="category_list">
-	{% for tier in occurrence.get_active_tiers %}
-	{% if tier.password == "" or show == 'show' %}
-  <form id="buy_tickets{{ tier.id }}" name="buy_tickets{{ tier.id }}" method="post">
-  <input type="hidden" id="occurrence_id" name="occurrence_id" value="{{ occurrence.id }}" />
-	<h3>{{ tier.label }}:</h3></h3>
-	{{ tier.description|safe }}
-	{% if tier.use_queue and not code %}
-	<p>This tier uses a queuing system.</p>
-	<p><a href="{{ queue_url }}">Click here to enter the queue.</a></p>
-	{% else %}
-	{% ifnotequal tier.get_tickets_available 0 %}
-	<div class="rc_btn_01"><a href="#" onclick="document.buy_tickets{{ tier.id }}.submit();">Buy Now</a></div>
-	<input type="hidden" name="code" id="code" value="{{ code }}" />
-	<li>
-	{% if occurrence.allow_donations %}
-	Optional donation: <input type="text" id="donation_{{ tier.id }}" name="donation_{{ tier.id }}" style="width:50px" />
-	<br/>
-	{% endif %}
-	Tickets: <select id="tickets_{{ tier.id }}" name="tickets_{{ tier.id }}">
-		{% for ticket_quantity in tier.get_ticket_range %}
-		<option value="{{ ticket_quantity }}">{{ ticket_quantity }}</option>
-		{% endfor %}
-	</select>
-	<strong>${{ tier.price }}
-	{% if occurrence.event.paypal_currency %}
-	({{ occurrence.event.paypal_currency }})
-	{% endif %}
-	</strong>
-	{% ifnotequal tier.password "" %}
-	<br/><em>This tier is password protected to restrict sales.</em>
-	<br/>Password: <input type="text" id="password_{{ tier.id }}" name="password_{{ tier.id }}" />
-	{% endifnotequal %}
-	</li>
-	{% if occurrence.options %}
-	{% for option in occurrence.options.all %}
-	<div style="margin-left: 10px">
-		<input type="checkbox" name="option_{{ option.id }}" id="option_{{ option.id }}" value="1"/>
-		<label for="option_{{ option.id }}">
-			{{ option.label }}
-			{% if option.price %}
-			- ${{ option.price }}
-			{% endif %}
-		</label>
-		{% if option.description %}
-		<p style="margin-left: 25px;">
-		<em>{{ option.description }}</em>
-		</p>
-		{% endif %}
-	</div>
-	{% endfor %}
-	{% endif %}
-	{% if occurrence.coupons.all %}
-	<br/>Coupon Code: <input type="text" id="coupon" name="coupon" />
-	{% endif %}
-	{% else %}
-	<strong>This tier is currently Sold Out.</strong>
-	{% endifnotequal %}
-	{% endif %}
-  </form>
-  <br/>
-	{% endif %}
-	{% endfor %}
-</ul>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<hr/>
-<div class="cleaner"></div>        
+<div class="row">
+  <div class="col-lg-6">
+    {% ifnotequal occurrences.count 1 %}
+    <h2>{{ occurrence }}</h2>
+    {% endifnotequal %}
+    {% for tier in occurrence.get_active_tiers %}
+    {% if tier.password == "" or show == 'show' %}
+    <div class="panel panel-primary">
+      <div class="panel-heading">{{ tier.label }}</div>
+      <div class="panel-body">
+        <form id="buy_tickets{{ tier.id }}" name="buy_tickets{{ tier.id }}" method="post">
+          <input type="hidden" id="occurrence_id" name="occurrence_id" value="{{ occurrence.id }}" />
+          <p>
+            {{ tier.description|safe }}
+          </p>
+          {% if tier.use_queue and not code %}
+          <p>This tier uses a queuing system.</p>
+          <p><a href="{{ queue_url }}">Click here to enter the queue.</a></p>
+          {% else %}
+          {% ifnotequal tier.get_tickets_available 0 %}
+          <input type="hidden" name="code" id="code" value="{{ code }}" />
+          {% if occurrence.allow_donations %}
+          <div class="form-group">
+            <label>Optional donation</label>
+            <input type="text" id="donation_{{ tier.id }}" name="donation_{{ tier.id }}" class="form-control" />
+          </div>
+          {% endif %}
+          <div class="form-group">
+            <label>Tickets</label>
+            <select id="tickets_{{ tier.id }}" name="tickets_{{ tier.id }}" class="form-control">
+              {% for ticket_quantity in tier.get_ticket_range %}
+              <option value="{{ ticket_quantity }}">{{ ticket_quantity }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <strong>
+              Price <span class="badge">${{ tier.price }}
+              {% if occurrence.event.paypal_currency %}
+              ({{ occurrence.event.paypal_currency }})
+              {% endif %}</span>
+            </strong>
+          </div>
+          {% ifnotequal tier.password "" %}
+          <div class="form-group">
+            <p><em>This tier is password protected to restrict sales.</em></p>
+            <label>Password</label>
+            <input type="text" id="password_{{ tier.id }}" name="password_{{ tier.id }}" class="form-control" />
+          </div>
+          {% endifnotequal %}
+          {% if occurrence.options %}
+          {% for option in occurrence.options.all %}
+          <div class="form-group">
+            <input type="checkbox" name="option_{{ option.id }}" id="option_{{ option.id }}" value="1"/>
+            <label for="option_{{ option.id }}">
+              {{ option.label }}
+              {% if option.price %}
+              - ${{ option.price }}
+              {% endif %}
+            </label>
+            {% if option.description %}
+            <p style="margin-left: 25px;">
+              <em>{{ option.description }}</em>
+            </p>
+            {% endif %}
+          </div>
+          {% endfor %}
+          {% endif %}
+          {% if occurrence.coupons.all %}
+          <div class="form-group">
+            <label>Coupon Code</label>
+            <input type="text" id="coupon" name="coupon" class="form-control" />
+          </div>
+          {% endif %}
+          <div class="form-group">
+            <a href="#" onclick="document.buy_tickets{{ tier.id }}.submit();" class="btn btn-primary btn-large">Buy Now</a>
+          </div>
+          {% else %}
+          <strong>This tier is currently Sold Out.</strong>
+          {% endifnotequal %}
+          {% endif %}
+        </form>
+      </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+  <div class="col-lg-6">
+    <div class="well text-center">
+      {{ occurrence.event.header|safe }}
+    </div>
+  </div>
+</div>
 {% else %}
 {% if occurrence.get_future_tiers %}
 <div class="row">

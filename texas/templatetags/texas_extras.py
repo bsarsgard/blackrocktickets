@@ -2,9 +2,24 @@ from django import template
 from django.contrib.auth.models import User
 from tickets.texas.models import *
 from datetime import datetime
-#import numpy
 
 register = template.Library()
+
+def do_get_order_count(parser, token):
+    try:
+        tag_name, user = token.split_contents()
+    except ValueError:
+        raise template.TemplateSyntaxError, "%r tag requires 1 argument" % token.contents.split()[0]
+    return GetOrderCountNode(user)
+register.tag('get_order_count', do_get_order_count)
+
+def do_get_ticket_count(parser, token):
+    try:
+        tag_name, user = token.split_contents()
+    except ValueError:
+        raise template.TemplateSyntaxError, "%r tag requires 1 argument" % token.contents.split()[0]
+    return GetTicketCountNode(user)
+register.tag('get_ticket_count', do_get_ticket_count)
 
 def do_get_payment_url(parser, token):
     try:
@@ -34,26 +49,76 @@ def do_list_purchases(parser, token):
     return ListPurchasesNode()
 register.tag('list_purchases', do_list_purchases)
 
+class GetOrderCountNode(template.Node):
+    def __init__(self, user):
+        self.user = template.Variable(user)
+
+    def render(self, context):
+        request = context['request']
+        user = self.user.resolve(context)
+        count = Purchase.objects.filter(
+                user=user
+        ).exclude(
+                status='D'
+        ).exclude(
+                status='T', expiration_date__lte=datetime.now()
+        ).exclude(
+                occurrence__end_date__lte=datetime.now()
+        ).count()
+        if count > 0:
+            return "<span class=\"badge\">%i</span>" % count
+        else:
+            return ""
+
+class GetTicketCountNode(template.Node):
+    def __init__(self, user):
+        self.user = template.Variable(user)
+
+    def render(self, context):
+        request = context['request']
+        user = self.user.resolve(context)
+        count = Ticket.objects.filter(
+                assigned_user=user, purchase__status='P'
+        ).exclude(
+                purchase__occurrence__end_date__lte=datetime.now()
+        ).count()
+        paid_purchases = Purchase.objects.filter(
+                user=user, status='P'
+        ).exclude(
+                occurrence__end_date__lte=datetime.now()
+        )
+        for purchase in paid_purchases:
+            count += purchase.ticket_set.count()
+        if count > 0:
+            return "<span class=\"badge\">%i</span>" % count
+        else:
+            return ""
+
 class ListPurchasesNode(template.Node):
     def render(self, context):
         request = context['request']
         user = request.user
         purchase_list = ""
         if user.is_authenticated():
+            # Get any tentative purchases
             purchases = Purchase.objects.filter(
                     user=user, status='T'
             ).exclude(
                     expiration_date__lte=datetime.now()
             )
-            if purchases.count() == 0:
-                purchase_list = "<div class=\"latest_news\">None</div>"
             for purchase in purchases:
+                expires = (purchase.expiration_date - datetime.now()) / 60
                 status = purchase.get_status_display()
-                purchase_list += "<div class=\"latest_news\">"
-                purchase_list += "<div class=\"header_03\">Expires: %s</div>" % purchase.expiration_date
-                purchase_list += "<p><span class=\"status_%s\">%s</span> - %i ticket(s)" % (status, status, purchase.ticket_set.count())
+                purchase_list += "<div class=\"alert alert-warning\">"
+                purchase_list += "<h4>Order expiring in: <span class=\"badge countdown\">%s</span> minutes</h4>" % expires.seconds
+                purchase_list += "<span class=\"label label-primary\">%s</span> - %i ticket(s)" % (status, purchase.ticket_set.count())
+                purchase_list += "<a href=\"/buy/purchases/\" class=\"btn btn-success btn-sm pull-right\">List purchases and pay</a>"
                 purchase_list += "</div>"
         else:
+            purchase_list += "<div class=\"alert alert-info dismissable\">"
+            purchase_list += "<h4>You are not logged in</h4>"
+            purchase_list += "<p><a href=\"/login/\">Click here to log in or create a new account</a></p>"
+            purchase_list += "</div>"
             ip_address = request.META['REMOTE_ADDR']
             purchase_requests = PurchaseRequest.objects.filter(
                     ip_address=ip_address
@@ -62,17 +127,13 @@ class ListPurchasesNode(template.Node):
             ).exclude(
                     expiration_date__lte=datetime.now()
             )
-            if purchase_requests.count() == 0:
-                purchase_list = "<div class=\"latest_news\">None</div>"
             for purchase_request in purchase_requests:
-                #if purchase_request.expiration_date <= datetime.now():
-                #    status = 'Expired'
-                #else:
-                #    status = 'Requested'
+                expires = (purchase_request.expiration_date - datetime.now()) / 60
                 status = 'Requested'
-                purchase_list += "<div class=\"latest_news\">"
-                purchase_list += "<div class=\"header_03\">Expires: %s</div>" % purchase_request.expiration_date
-                purchase_list += "<p><span class=\"status_%s\">%s</span> - %i ticket(s)" % (status, status, purchase_request.tickets_requested)
+                purchase_list += "<div class=\"alert alert-danger\">"
+                purchase_list += "<h4>Order expiring in: <span class=\"badge countdown\">%s</span></h4>" % expires.seconds
+                purchase_list += "<span class=\"label label-primary\">%s</span> - %i ticket(s)" % (status, purchase_request.tickets_requested)
+                purchase_list += "<a href=\"/buy/purchases/\" class=\"btn btn-success btn-sm pull-right\">Login to complete purchase</a>"
                 purchase_list += "</div>"
 
         return purchase_list

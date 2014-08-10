@@ -72,24 +72,27 @@ $(document).ready(function() {
 });
 </script>
 {% endblock %}
-{% block content %}
-<div class="header_01">Schedule - {{ schedule }}</div>
-
+{% block title %}Schedule - {{ schedule }}{% endblock %}
+{% block banner %}Schedule - {{ schedule }}{% endblock %}
+{% block lead %}
 {% if schedule.description %}
 <p>
 {{ schedule.description|safe }}
 </p>
 {% endif %}
+{% endblock %}
+{% block content %}
+<div class="row">
+    <ul>
+      {% for position in schedule.get_positions %}
+      {% if position.description %}
+      <li>{{ position.description|safe }}</li>
+      {% endif %}
+      {% endfor %}
+    </ul>
 
-<ul>
-{% for position in schedule.get_positions %}
-{% if position.description %}
-<li>{{ position.description|safe }}</li>
-{% endif %}
-{% endfor %}
-</ul>
-
-<table class="schedule ui-widget ui-widget-content">
+<div class="col-lg-12">
+<table class="schedule ui-widget ui-widget-content col-lg-12">
 	<thead>
 		<tr class="ui-widget-header">
 			<th></th>
@@ -146,6 +149,8 @@ $(document).ready(function() {
 		{% endfor %}
 	</tbody>
 </table>
+</div>
+</div>
 <div id="sign_up_dialog" title="Sign Up">
 	<form id="sign_up_form" method="post">
 	<input type="hidden" id="sign_up_position" name="sign_up_position" value="" />

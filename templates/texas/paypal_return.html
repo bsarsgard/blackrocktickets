@@ -1,9 +1,14 @@
 {% extends "texas/buy.html" %}
 {% block head %}
 {% endblock %}
-{% block title %}Index{% endblock %}
-{% block content %}
-<div class="header_01"><strong>Review Payment Details</strong></div>
+{% block title %}Process Payment{% endblock %}
+{% block banner %}Complete Your Purchase{% endblock %}
+{% block lead %}Just one more step, we're almost done!{% endblock %}
+{% block purchases %}{% endblock %}
+{% block alerts %}
+<div class="panel panel-info">
+  <div class="panel-heading">Review Payment Details</div>
+  <div class="panel-body">
 <p><em>Your purchase is <strong>NOT</strong> yet complete!</em></p>
 <p>Purchaser name: {{ first_name }} {{ last_name }}</p>
 <div class="header_02">Tickets:</div>
@@ -19,5 +24,7 @@
 </strong></p>
 <p><input type="checkbox" name="agree" id="agree" value="1" /><label for="agree">I agree to the Black Rock Tickets <a href="/terms/" target="_new">tems and conditions</a>.</label>
 <p><em>Click "Process" to complete your order and charge your PayPal account.  Please be patient if there is a delay, and do not click  the button multiple times.</em></p>
-<div class="rc_btn_01"><a href="/buy/paypal_process/{{ purchase.id }}/" onclick="if (document.getElementById('agree').checked) { return true; } else { alert('You must agree to our terms and conditions to purchase.'); return false; }">Process</a></div>
+<a href="/buy/paypal_process/{{ purchase.id }}/" class="btn btn-primary" onclick="if (document.getElementById('agree').checked) { return true; } else { alert('You must agree to our terms and conditions to purchase.'); return false; }">Process</a>
+  </div>
+</div>
 {% endblock %}

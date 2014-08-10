@@ -12,9 +12,7 @@
 {% block title %}Volunteer Schedules{% endblock %}
 {% block banner %}Volunteer Schedules{% endblock %}
 {% block lead %}Sign up early, sign up often!{% endblock %}
-{% block left_bar %}
-{% endblock %}
-{% block content %}
+{% block alerts %}
 {% for sign_up in sign_ups %}
 <h2>{{ sign_up.occurrence }}</h2>
 <div class="list-group">

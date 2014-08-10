@@ -266,6 +266,8 @@ def buy(request):
                 break
         if need_code:
             code = get_code(request)
+            if code:
+                show = "show"
             if code and not check_queue_code(code):
                 return direct_to_template(request, 'texas/error.html',
                     {'message': "Invalid queue code!"})
@@ -310,6 +312,8 @@ def buy_occurrence(request, occurrence_id):
                 break
         if need_code:
             code = get_code(request)
+            if code:
+                show = "show"
         if code and not check_queue_code(code):
             return direct_to_template(request, 'texas/error.html',
                 {'message': "Invalid queue code!"})
@@ -529,8 +533,8 @@ def tickets(request):
             ticket_id = request.POST.get('ticket_id', '')
             ticket = Ticket.objects.get(pk=ticket_id)
             if ticket.purchase.user != request.user:
-		return direct_to_template(request, 'texas/error.html',
-		    {'message': "Access denied"})
+                return direct_to_template(request, 'texas/error.html',
+                        {'message': "Access denied"})
             else:
                 try:
                     assigned_user = User.objects.get(email__iexact=email)
@@ -546,9 +550,11 @@ def tickets(request):
                     assigned_user.save()
 
                 ticket.assigned_user = assigned_user
-                ticket.set_code()
+                #ticket.set_code()
                 ticket.save()
                 do_send_transfer_notification(ticket)
+                return redirect_to(request, '/tickets/')
+
     paid_purchases = Purchase.objects.filter(
             user=request.user, status='P'
     ).exclude(
@@ -576,27 +582,28 @@ def purchases(request):
             expiration_date__lte=datetime.now()
     ).exclude(
             occurrence__end_date__lte=datetime.now()
-    )
+    ).order_by('-purchase_date')
     expired_purchases = Purchase.objects.filter(
             user=request.user, status='T'
     ).exclude(
             expiration_date__gt=datetime.now()
     ).exclude(
             occurrence__end_date__lte=datetime.now()
-    )
+    ).order_by('-purchase_date')
     paid_purchases = Purchase.objects.filter(
             user=request.user, status='P'
     ).exclude(
             occurrence__end_date__lte=datetime.now()
-    )
+    ).order_by('-purchase_date')
     held_purchases = Purchase.objects.filter(
             user=request.user, status='H'
     ).exclude(
             occurrence__end_date__lte=datetime.now()
-    )
+    ).order_by('-purchase_date')
     old_purchases = Purchase.objects.filter(
             user=request.user, status='P',
-            occurrence__end_date__lte=datetime.now())
+            occurrence__end_date__lte=datetime.now()
+    ).order_by('-purchase_date')
     return direct_to_template(request, 'texas/purchases.html',
             {'tentative_purchases': tentative_purchases, 'expired_purchases':
             expired_purchases, 'paid_purchases': paid_purchases,
@@ -715,8 +722,8 @@ def paypal_process(request, purchase_id):
             do_send_purchase_confirmation(purchase)
         # update queue
         for purchaserequest in purchase.purchaserequest_set.all():
-            if purchaserequest.code:
-                pay_queue_code(purchaserequest.code)
+            if purchaserequest.queue_code:
+                pay_queue_code(purchaserequest.queue_code)
         return redirect_to(request, "/buy/purchases/receipt/%i/" % purchase.id)
     else:
         return direct_to_template(request, 'texas/error.html',
