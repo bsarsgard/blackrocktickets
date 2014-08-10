@@ -22,6 +22,7 @@ $(document).ready(function() {
 });
 </script>
 {% endblock %}
+{% block purchases %}{% endblock %}
 {% block alerts %}
 {% if message %}
 <div class="alert alert-dismissable alert-danger">
@@ -38,73 +39,81 @@ $(document).ready(function() {
 {% endblock %}
 
 {% block content %}
-<div class="panel panel-primary">
-  <div class="panel-heading">
-    <h3 class="panel-title">Login with an existing account ...</h3>
+<div class="row">
+  <div class="col-lg-4">
+    <div class="panel panel-primary">
+      <div class="panel-heading">
+        <h3 class="panel-title">Login with an existing account ...</h3>
+      </div>
+      <div class="panel-body">
+        <form method="post" name="form_login" id="form_login" action="/login/">
+          <fieldset>
+            <legend>Please enter your email address password and click "Login."</legend>
+            <div class="form-group">
+              <input type="hidden" name="login_is_new" id="login_is_new" value="0" />
+              {{ form.username.label_tag }}
+              {{ form.username|addcss:'form-control' }}
+            </div>
+            <div class="form-group">
+              {{ form.password.label_tag }}
+              {{ form.password|addcss:'form-control' }}
+            </div>
+            <div class="form-group">
+              <button class="btn btn-primary pull-right" onclick="document.form_login.submit();">Login</button>
+            </div>
+          </fieldset>
+        </form>
+      </div>
+    </div>
   </div>
-  <div class="panel-body">
-    <form method="post" name="form_login" id="form_login" action="/login/">
-      <fieldset>
-        <legend>Please enter your email address password and click "Login."</legend>
-        <div class="form-group">
-          <input type="hidden" name="login_is_new" id="login_is_new" value="0" />
-          {{ form.username.label_tag }}
-          {{ form.username|addcss:'form-control' }}
-        </div>
-        <div class="form-group">
-          {{ form.password.label_tag }}
-          {{ form.password|addcss:'form-control' }}
-        </div>
-        <div class="form-group">
-          <button class="btn btn-default" onclick="document.form_login.submit();">Login</button>
-        </div>
-      </fieldset>
-    </form>
+  <div class="col-lg-4">
+    <div class="panel panel-success">
+      <div class="panel-heading">
+        <h3 class="panel-title">... register a new account ...</h3>
+      </div>
+      <div class="panel-body">
+        <form method="post" name="new_account" id="new_account" action="/login/">
+          <fieldset>
+            <legend>To create a new account, enter your email address and choose a password below, then click "New Account."</legend>
+            <div class="form-group">
+              <input type="hidden" name="login_is_new" id="login_is_new" value="1" />
+              {{ form.username.label_tag }}
+              {{ form.username|addcss:'form-control' }}
+            </div>
+            <div class="form-group">
+              {{ form.password.label_tag }}
+              {{ form.password|addcss:'form-control' }}
+            </div>
+            <div class="form-group">
+              <p>Warning: this site is not SSL protected so password will be transmitted in plain text.  Don't do anything stupid like using the same password as your online banking.</p>
+              <button class="btn btn-success pull-right" onclick="if (validate('new_account', 'id_username')) { document.new_account.submit(); }">New Account</button>
+            </div>
+          </fieldset>
+        </form>
+      </div>
+    </div>
   </div>
-</div>
-<div class="panel panel-success">
-  <div class="panel-heading">
-    <h3 class="panel-title">... register a new account ...</h3>
-  </div>
-  <div class="panel-body">
-    <form method="post" name="new_account" id="new_account" action="/login/">
-      <fieldset>
-        <legend>To create a new account, enter your email address and choose a password below, then click "New Account."</legend>
-        <div class="form-group">
-          <input type="hidden" name="login_is_new" id="login_is_new" value="1" />
-          {{ form.username.label_tag }}
-          {{ form.username|addcss:'form-control' }}
-        </div>
-        <div class="form-group">
-          {{ form.password.label_tag }}
-          {{ form.password|addcss:'form-control' }}
-        </div>
-        <div class="form-group">
-          <p>Warning: this site is not SSL protected so password will be transmitted in plain text.  Don't do anything stupid like using the same password as your online banking.</p>
-          <button class="btn btn-default" onclick="if (validate('new_account', 'id_username')) { document.new_account.submit(); }">New Account</button>
-        </div>
-      </fieldset>
-    </form>
-  </div>
-</div>
-<div class="panel panel-info">
-  <div class="panel-heading">
-    <h3 class="panel-title">... or reset your password</h3>
-  </div>
-  <div class="panel-body">
-    <form method="post" name="forgot" id="forgot" action="/login/">
-      <fieldset>
-        <legend>Please enter your email address and then click "Reset" to have your password reset and sent to you.  You will then be able to change it once you've logged in.</legend>
-        <div class="form-group">
-          <input type="hidden" name="login_is_new" id="login_is_new" value="2" />
-          {{ form.username.label_tag }}
-          {{ form.username|addcss:'form-control' }}
-        </div>
-        <div class="form-group">
-          <button class="btn btn-default" onclick="document.forgot.submit();">Reset</button>
-        </div>
-      </fieldset>
-    </form>
+  <div class="col-lg-4">
+    <div class="panel panel-info">
+      <div class="panel-heading">
+        <h3 class="panel-title">... or reset your password</h3>
+      </div>
+      <div class="panel-body">
+        <form method="post" name="forgot" id="forgot" action="/login/">
+          <fieldset>
+            <legend>Please enter your email address and then click "Reset" to have your password reset and sent to you.  You will then be able to change it once you've logged in.</legend>
+            <div class="form-group">
+              <input type="hidden" name="login_is_new" id="login_is_new" value="2" />
+              {{ form.username.label_tag }}
+              {{ form.username|addcss:'form-control' }}
+            </div>
+            <div class="form-group">
+              <button class="btn btn-info pull-right" onclick="document.forgot.submit();">Reset</button>
+            </div>
+          </fieldset>
+        </form>
+      </div>
+    </div>
   </div>
 </div>
 

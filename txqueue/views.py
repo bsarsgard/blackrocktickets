@@ -161,7 +161,7 @@ def index(request):
         if res in ready:
             res.is_ready = 1
             res.save()
-            update_stats(res.queuedtier)
+            update_stats(res.queued_tier)
 
     since_start = datetime.now() - res.reserved
     min_since = timedelta(minutes=1)
@@ -210,7 +210,7 @@ def check_code(request, code):
         if reservation and reservation.is_ready and not reservation.finished:
             reservation.started = datetime.now()
             reservation.save()
-            update_stats(reservation.queuedtier)
+            update_stats(reservation.queued_tier)
             return direct_to_template(request, 'txqueue/return.txt', {'code':
                 1})
         else:
@@ -227,7 +227,7 @@ def use_code(request, code):
             reservation.finished = datetime.now()
             reservation.tickets = tix
             reservation.save()
-            update_stats(reservation.queuedtier)
+            update_stats(reservation.queued_tier)
             return direct_to_template(request, 'txqueue/return.txt',
                     {'code': 1})
         else:
@@ -242,7 +242,7 @@ def pay_code(request, code):
         if reservation and reservation.is_ready and not reservation.paid:
             reservation.paid = datetime.now()
             reservation.save()
-            update_stats(reservation.queuedtier)
+            update_stats(reservation.queued_tier)
             return direct_to_template(request, 'txqueue/return.txt',
                     {'code': 1})
         else:
@@ -253,9 +253,13 @@ def pay_code(request, code):
 
 def update_stats(tier):
     tier.ticket_count_paid = tier.reservation_set.filter(
-            paid__isnull=False).aggregate(Sum('tickets'))
-    tier.average_tickets = float(tier.reservation_set.filter(
-            paid__isnull=False).count()) / float(tier.ticket_count_paid)
+            paid__isnull=False).aggregate(Sum('tickets'))['tickets__sum']
+    if tier.ticket_count_paid:
+        tier.average_tickets = float(tier.ticket_count_paid) /\
+                float(tier.reservation_set.filter(paid__isnull=False).count())
+    else:
+        tier.ticket_count_paid = 0
+        tier.average_tickets = 1
     tier.ticket_count_ready = tier.reservation_set.filter(is_ready=1).exclude(
             started__isnull=False).count() * tier.average_tickets
     tier.ticket_count_started = tier.reservation_set.filter(
@@ -264,3 +268,4 @@ def update_stats(tier):
     tier.ticket_count_finished = tier.reservation_set.filter(
             finished__isnull=False).exclude(
             paid__isnull=False).count() * tier.average_tickets
+    tier.save()

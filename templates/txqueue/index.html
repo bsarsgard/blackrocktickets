@@ -55,6 +55,20 @@
         </div>
       </div>
     </div>
+    {% if reservation %}
+      {% if reservation.is_ready %}
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="alert alert-success">
+            <h2>The ticket system will see you now</h2>
+            <p>
+              <a class="btn btn-primary btn-lg" href="{{ return_url }}/?code={{ reservation.code }}">Click here to proceed</a>
+            </p>
+          </div>
+        </div>
+      </div>
+      {% endif %}{# reservation.is_ready #}
+    {% endif %}{# reservation #}
     {% else %}{# tier.ticket_count_finished >= tier.cap #}
     <div class="container">
       {% if starts %}
@@ -160,15 +174,15 @@
       {% if reservation.is_ready %}
       <div class="row">
         <div class="col-lg-12">
-          <h2>The ticket system will see you now</h2>
+          <div class="alert alert-success">
+            <h2>The ticket system will see you now</h2>
+            <p>
+              <a class="btn btn-primary btn-lg" href="{{ return_url }}/?code={{ reservation.code }}">Click here to proceed</a>
+            </p>
+          </div>
         </div>
       </div>
-      <div class="row">
-        <div class="col-lg-12">
-          <a href="{{ return_url }}/?code={{ reservation.code }}">Click here to proceed</a>
-        </div>
-      </div>
-      {% else %}{# reservation.is_ready #}
+      {% endif %}{# reservation.is_ready #}
       <div class="row">
         <div class="col-lg-12">
           <h1>Ticket Stats and Other Lies</h1>
@@ -233,7 +247,6 @@
           <br/>You will not lose your place in line, so there is no need to hammer on the F5 key like a jerk.</p>
         </div>
       </div>
-      {% endif %}{# reservation.is_ready #}
       {% endif %}{# starts #}
       {% if pony %}
       <div class="row">
@@ -316,19 +329,21 @@
       {% endif %}{# reservation #}
 
       function countdown() {
-        var count = parseInt($("#countdown").html());
-        if ($(".block-countdown").is(":focus")) {
-          setTimeout("countdown();", 1000);
-        } else {
-          count -= 1;
-          if (count > 0) {
-            $("#countdown").html(count);
+        if ($("#countdown").length) {
+          var count = parseInt($("#countdown").html());
+          if ($(".block-countdown").is(":focus")) {
             setTimeout("countdown();", 1000);
           } else {
-            if (window.location.search.indexOf('code') == -1) {
-              window.location = '/q/?code={{ reservation.code }}';
+            count -= 1;
+            if (count > 0) {
+              $("#countdown").html(count);
+              setTimeout("countdown();", 1000);
             } else {
-              window.location.reload(false);
+              if (window.location.search.indexOf('code') == -1) {
+                window.location = '/q/?code={{ reservation.code }}';
+              } else {
+                window.location.reload(false);
+              }
             }
           }
         }

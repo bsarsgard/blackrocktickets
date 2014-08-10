@@ -2,20 +2,31 @@
 {% block head %}
 {% endblock %}
 {% block title %}Home{% endblock %}
-{% block banner %}Home{% endblock %}
-{% block lead %}Upcoming Events{% endblock %}
+{% block banner %}{{ current_site.name }}{% endblock %}
+{% block lead %}
+{% ifequal events.count 1 %}
+{% for event in events %}
+    <p class="lead">{{ event.description|safe }}</p>
+{% endfor %}
+{% endifequal %}
+{% endblock %}
 {% block content %}
 {% for event in events %}
+{% ifnotequal events.count 1 %}
 <div class="row">
   <div class="col-lg-12">
     <h1 class="page-header">{{ event.label }}</h1>
   </div>
 </div>
+{% endifnotequal %}
 <div class="row">
   <a id="event-{{ event.id }}"></a>
   <div class="col-lg-6">
+    {% ifnotequal events.count 1 %}
     <p>{{ event.description|safe }}</p>
+    {% endifnotequal %}
     {% for occurrence in event.get_active_occurrences %}
+    <h3>{{ occurrence }}</h3>
     <p>{{ occurrence.description|safe }}</p>
     <p>Please email <a href="mailto:{{ event.admin_email }}">{{ event.admin_email }}</a> for more information.</a>
     <div class="list-group">
@@ -36,7 +47,7 @@
 
       {% for tier in occurrence.get_active_tiers %}
       {% ifequal tier.password "" %}
-      <a href="{% ifequal tier.get_tickets_available 0 %}#event-{{ event.id }}{% else %}/buy/{{ occurrence.id }}/{% endifequal %}" class="list-group-item active">
+      <a href="{% ifequal tier.get_tickets_available 0 %}#event-{{ event.id }}{% else %}/buy/{{ occurrence.id }}/{% endifequal %}" class="list-group-item">
         <h4 class="list-group-item-heading">{{ tier.label }}</h4>
         <p class="list-group-item-text">{{ tier.start_date|date:"D d M Y" }} - {{ tier.end_date|date:"d M" }}
           {% ifequal tier.get_tickets_available 0 %}
@@ -65,11 +76,13 @@
       {% endfor %}
     </div>
     {% if occurrence.get_active_tiers %}
-    <div class="rc_btn_01"><a href="/buy/{{ occurrence.id }}/">Buy Tickets</a></div>
+    <a href="/buy/{{ occurrence.id }}/" class="btn btn-primary">Buy Tickets</a>
     {% endif %}
   </div>
   <div class="col-lg-6">
-    {{ event.header|safe }}
+    <div class="well text-center">
+      {{ event.header|safe }}
+    </div>
   </div>
 </div>
 {% endfor %}
