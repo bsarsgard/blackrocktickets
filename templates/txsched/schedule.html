@@ -1,4 +1,4 @@
-{% extends "txsched/index.html" %}
+{% extends "base.html" %}
 {% block script %}
 <script type="text/javascript">
 function sign_up(position, start_date, end_date, detail_required) {
@@ -72,29 +72,40 @@ $(document).ready(function() {
 });
 </script>
 {% endblock %}
-{% block title %}Schedule - {{ schedule }}{% endblock %}
-{% block banner %}Schedule - {{ schedule }}{% endblock %}
-{% block lead %}
+{% block breadcrumb %}
+<ol class="breadcrumb">
+  <li><a href="/schedules/">Volunteer Schedules</a></li>
+  <li class="active">{{ schedule }}</li>
+</ol>
+{% endblock %}
+{% block title %}{{ schedule }} Schedule{% endblock %}
+{% block banner %}{{ schedule }}{% endblock %}
+{% block alerts %}
 {% if schedule.description %}
 <p>
-{{ schedule.description|safe }}
+  {{ schedule.description|safe }}
 </p>
 {% endif %}
+<div class="list-group">
+  {% for position in schedule.get_positions %}
+  {% if position.description %}
+  <div class="list-group-item">
+  <h4 class="list-group-item-heading">{{ position }}</h4>
+  <p class="list-group-item-text">
+  {{ position.description|safe }}
+  </p>
+  </div>
+  {% endif %}
+  {% endfor %}
+</div>
 {% endblock %}
 {% block content %}
 <div class="row">
-    <ul>
-      {% for position in schedule.get_positions %}
-      {% if position.description %}
-      <li>{{ position.description|safe }}</li>
-      {% endif %}
-      {% endfor %}
-    </ul>
 
 <div class="col-lg-12">
-<table class="schedule ui-widget ui-widget-content col-lg-12">
+<table class="table table-hover table-bordered">
 	<thead>
-		<tr class="ui-widget-header">
+		<tr>
 			<th></th>
 			{% for position in schedule.get_positions %}
 			{% if not position.parent %}
@@ -106,14 +117,14 @@ $(document).ready(function() {
 	<tbody>
 		{% for slot in slots %}
 		<tr>
-			<th class="ui-widget-header">
+			<th>
 				{% if slot.header %}
-				<div class="header_02">{{ slot.header }}</div>
+				<div>{{ slot.header }}</div>
 				{% endif %}
 				{{ slot.start_date|date:"f A" }}
 			</th>
 			{% for position in slot.positions %}
-			<td rowspan="{{ position.blocks }}" class="{% if position.black_outs %}black_out{% endif %}">
+      <td rowspan="{{ position.blocks }}" class="{% if position.black_outs %}black_out danger{% else %}{% for shift in position.shifts %}{% ifequal request.user shift.user %}success {% endifequal %}{% endfor %}{% if position.shift_open %}info{% endif %}{% endif %}">
 				{% if position.black_outs %}
 				{% for black_out in position.black_outs %}
 				{{ black_out.label }}
@@ -126,7 +137,7 @@ $(document).ready(function() {
 				{{ shift.label }}
 				{% endif %}
 				{% ifequal request.user shift.user %}
-				<button class="remove" onclick="remove_shift('{{ position.position_id }}','{{ slot.start_date|date:"Y-m-d H:i" }}');">Remove</button>
+				<button class="btn btn-danger remove" onclick="remove_shift('{{ position.position_id }}','{{ slot.start_date|date:"Y-m-d H:i" }}');">Remove</button>
 				{% endifequal %}
 				{% if sign_up in request.user.signup_set.all %}
 					&lt;<a href="mailto:{{ shift.user.email }}?subject=Playa Del Fuego {{ schedule }} Schedule" target="_new">{{ shift.user.email }}</a>&gt;
@@ -135,11 +146,11 @@ $(document).ready(function() {
 						&lt;<a href="mailto:{{ shift.user.email }}?subject=Playa Del Fuego {{ schedule }} Schedule" target="_new">{{ shift.user.email }}</a>&gt;
 					{% endif %}
 				{% endif %}
-    <br/>
+        <br/>
 				{% endfor %}
 				{% if request.user.is_authenticated %}
 				{% if position.shift_open %}
-				<button class="sign_up" onclick="sign_up('{{ position.position_id }}','{{ slot.start_date|date:"Y-m-d H:i" }}','{{ position.shift_end|date:"Y-m-d H:i" }}', '{{ position.detail_required }}');">Sign Up ({{ slot.start_date|date:"f A" }} - {{ position.shift_end|date:"f A" }})</button>
+				<button class="btn btn-success sign_up" onclick="sign_up('{{ position.position_id }}','{{ slot.start_date|date:"Y-m-d H:i" }}','{{ position.shift_end|date:"Y-m-d H:i" }}', '{{ position.detail_required }}');">Sign Up ({{ slot.start_date|date:"f A" }} - {{ position.shift_end|date:"f A" }})</button>
 				{% endif %}
 				{% endif %}
 				{% endif %}
