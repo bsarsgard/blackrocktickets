@@ -4,11 +4,15 @@
 {% block title %}Home{% endblock %}
 {% block banner %}{{ current_site.name }}{% endblock %}
 {% block lead %}
-{% ifequal events.count 1 %}
+{% if events.count == 1 %}
 {% for event in events %}
-    <p class="lead">{{ event.description|safe }}</p>
-{% endfor %}
-{% endifequal %}
+<p class="lead">{{ event.description|safe }}</p>
+{% endfor %}{# event #}
+{% else %}{# events.count == 1 #}
+{% if events.count == 0 %}
+<p class="lead">No Events Currently Active</p>
+{% endif %}{# events.count == 0 #}
+{% endif %}{# events.count == 1 #}
 {% endblock %}
 {% block content %}
 {% for event in events %}
@@ -18,7 +22,7 @@
     <h1 class="page-header">{{ event.label }}</h1>
   </div>
 </div>
-{% endifnotequal %}
+{% endifnotequal %}{# events.count 1 #}
 <div class="row">
   <a id="event-{{ event.id }}"></a>
   <div class="col-lg-6">

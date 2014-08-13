@@ -10,4 +10,24 @@ import time
 from django.contrib.auth.models import User
 
 def index(request):
-    return direct_to_template(request, 'txadmin/index.html')
+    occurrences = Occurrence.objects.filter(
+            event__admins=request.user).order_by('-end_date')
+    occurrences_old = occurrences.filter(end_date__lt=datetime.now())
+    occurrences_active = occurrences.filter(end_date__gte=datetime.now())
+    return direct_to_template(request, 'txadmin/index.html', {
+            'occurrences_active': occurrences_active,
+            'occurrences_old': occurrences_old
+        })
+
+def occurrence_stats(request, occurrence_id):
+    occurrence = get_object_or_404(Occurrence, pk=occurrence_id)
+    if not request.user in occurrence.event.admins.all():
+        return direct_to_template(request, 'texas/error.html',
+            {'message': "Not logged in or lacking admin privileges"})
+
+    tickets = Ticket.objects.filter(purchase__occurrence=occurrence,
+            purchase__status='P')
+
+    return direct_to_template(request,
+            'txadmin/occurrence/stats.html',
+            {'occurrence': occurrence, 'tickets': tickets })

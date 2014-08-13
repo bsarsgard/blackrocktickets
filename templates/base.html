@@ -40,24 +40,10 @@
                 <li><a href="/tickets/">My Tickets</a></li>
                 <li><a href="/buy/purchases/">Current Purchases</a></li>
                 <li><a href="/password_change/">Change Password</a></li>
-                {% if request.user.event_set.exists %}
+                {% if request.user.event_set.exists or request.user.signup_set.exists %}
                 <li class="divider"></li>
+                <li><a href="/a/">Admin Dashboard</a></li>
                 {% endif %}
-                {% for event in request.user.event_set.all %}
-                <li><a href="/events/{{ event.id }}/admin/">{{ event }} Admin</a></li>
-                {% endfor %}
-                {% if request.user.signup_set.exists %}
-                <li class="divider"></li>
-                {% endif %}
-                {% for sign_up in request.user.signup_set.all %}
-                <li><a href="/schedules/sign_up/{{ sign_up.id }}/admin/">{{ sign_up.occurrence.label }} Admin</a></li>
-                {% endfor %}
-                {% if request.user.schedule_set.exists %}
-                <li class="divider"></li>
-                {% endif %}
-                {% for schedule in request.user.schedule_set.all %}
-                <li><a href="/schedules/{{ schedule.id }}/{{latest_signups.id}}/">{{ schedule.label }} Admin</a></li>
-                {% endfor %}
                 <li class="divider"></li>
                 <li><a href="/logout/">Logout</a></li>
               </ul>
@@ -94,7 +80,7 @@
             {% if request.user.is_authenticated %}
             <div class="panel panel-default">
               <div class="panel-heading">Control Panel</div>
-                <div class="panel-body">
+              <div class="panel-body">
                 {% block left_bar %}
                 <ul class="nav nav-pills nav-stacked">
                   <li>
@@ -110,28 +96,13 @@
                     </a>
                   </li>
                   <li><a href="/password_change/">Change Password</a></li>
-                  {% if request.user.event_set.exists or request.user.signup_set.exists or request.user.schedule_set.exists %}
-                  <li class="dropdown">
-                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                      Admin <span class="caret"></span>
-                    </a>
-                    <ul class="dropdown-menu">
-                      {% for event in request.user.event_set.all %}
-                      <li><a href="/events/{{ event.id }}/admin/">{{ event }}</a></li>
-                      {% endfor %}
-                      {% for sign_up in request.user.signup_set.all %}
-                      <li><a href="/schedules/sign_up/{{ sign_up.id }}/admin/">{{ sign_up.occurrence.label }}</a></li>
-                      {% endfor %}
-                      {% for schedule in request.user.schedule_set.all %}
-                      <li><a href="/schedules/{{ schedule.id }}/{{latest_signups.id}}/">{{ schedule.label }}</a></li>
-                      {% endfor %}
-                    </ul>
-                  </li>
+                  {% if request.user.event_set.exists or request.user.signup_set.exists %}
+                  <li><a href="/a/">Admin Dashboard</a></li>
                   {% endif %}
                   <li><a href="/logout/">Logout</a></li>
                 </ul>
                 {% endblock %}
-              </div>
+              </div><!-- panel-body -->
             </div>
             {% endif %}
           </div>
