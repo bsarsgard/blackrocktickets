@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block breadcrumb %}
+<ol class="breadcrumb">
+  <li><a href="/a/">Admin</a></li>
+  <li>{{ occurrence }}</li>
+  <li class="active">Stats</li>
+</ol>
+{% endblock %}
+{% block head %}
+{% endblock %}
+{% block title %}{{ occurrence }} Stats{% endblock %}
+{% block banner %}Stats{% endblock %}
+{% block lead %}{{ occurrence }}{% endblock %}
+{% block alerts %}
+<div class="well well-lg">
+  <div class="row">
+    <div class="col-md-6">
+      <div class="alert alert-info">
+        <strong>Tickets: </strong> <span class="badge">{{ occurrence.get_tickets_purchased }}</span>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="alert alert-info">
+        <strong>Cap: </strong> <span class="badge">{{ occurrence.cap }}</span>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <div class="alert alert-info">
+        <strong>Purchases: </strong> <span class="badge">{{ occurrence.get_purchase_count }}</span>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="alert alert-info">
+        <strong>Average Purchase: </strong> <span class="badge">{{ occurrence.get_average_purchase|floatformat }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block content %}
+<div class="row">
+  <div class="col-md-6">
+    <div class="well">
+      <div id="tickets-by-tier" style="width:100%; height:400px;"></div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="well">
+      <div id="purchase-sizes" style="width:100%; height:400px;"></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block script %}
+<script src="http://code.highcharts.com/highcharts.js"></script>
+<script type="text/javascript">
+  $(function() {
+    $('#tickets-by-tier').highcharts({
+      chart: {
+        type: 'xy'
+      },
+      title: {
+        text: 'Tickets and Purchases by Tier'
+      },
+      xAxis: {
+        categories:
+          [{% for tier in occurrence.tier_set.all %}'{{ tier.label|safe }}'{% if not forloop.last %},{% endif %}{% endfor %}]
+      },
+      yAxis: [{
+        title: {
+          text: 'Tickets',
+          style: {
+            color: Highcharts.getOptions().colors[1]
+          }
+        },
+        labels: {
+          style: {
+            color: Highcharts.getOptions().colors[1]
+          }
+        },
+        min: 0
+      },{
+        title: {
+          text: 'Purchases',
+          style: {
+            color: Highcharts.getOptions().colors[0]
+          }
+        },
+        labels: {
+          style: {
+            color: Highcharts.getOptions().colors[0]
+          }
+        },
+        opposite: true,
+        min: 0
+      }],
+      series: [{
+        name: 'Purchases',
+        type: 'spline',
+        yAxis: 1,
+        data:
+          [{% for tier in occurrence.tier_set.all %}{{ tier.purchaserequest_set.count }}{% if not forloop.last %},{% endif %}{% endfor %}]
+      },{
+        name: 'Cap',
+        type: 'column',
+        data:
+          [{% for tier in occurrence.tier_set.all %}{{ tier.cap|default_if_none:0 }}{% if not forloop.last %},{% endif %}{% endfor %}]
+      },{
+        name: 'Tickets Sold',
+        type: 'column',
+        data:
+          [{% for tier in occurrence.tier_set.all %}{{ tier.get_ticket_count }}{% if not forloop.last %},{% endif %}{% endfor %}]
+      }]
+    });
+
+    $('#purchase-sizes').highcharts({
+      chart: {
+        plotBackgroundColor: null,
+        plotBorderWidth: 1,
+        plotShadow: false
+      },
+      title: {
+        text: 'Tickets per Purchase'
+      },
+      tooltip: {
+        pointFormat: '<b>{point.name}</b>: {point.y}'
+      },
+      plotOptions: {
+        pie: {
+          allowPointSelect: true,
+          cursor: 'pointer',
+          dataLabels: {
+            enabled: true,
+            format: '<b>{point.name}</b>: {point.y}',
+            style: {
+                color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+            }
+          }
+        }
+      },
+      series: [{
+        type: 'pie',
+        name: 'Purchases',
+        data: [
+          {% for count, tx in occurrence.get_purchase_counts.items %}
+          ['{{ count }} Tickets', {{ tx }}]{% if not forloop.last %},{% endif %}
+          {% endfor %}
+        ]
+      }]
+    });
+  });
+</script>
+{% endblock %}
