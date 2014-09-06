@@ -53,7 +53,7 @@ urlpatterns = patterns('',
     (r'^confirm/(?P<user_id>\d+)/(?P<code>.+)/$',
         'tickets.texas.views.user_confirm'),
     (r'^logout/$', 'tickets.texas.views.user_logout'),
-    (r'^password_change/$', 'django.contrib.auth.views.password_change'),
+    (r'^password_change/$', 'django.contrib.auth.views.password_change', {'https': True}),
     (r'^password_change_done/$',
         'django.contrib.auth.views.password_change_done'),
 )

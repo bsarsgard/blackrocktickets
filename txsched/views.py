@@ -31,22 +31,24 @@ from django.contrib.auth.models import User
 def index(request):
     sign_ups = SignUp.objects.filter(occurrence__end_date__gte=datetime.now(),
             start_date__lte=datetime.now())
-    latest_signups = SignUp.objects.latest('start_date')
-    
+    latest_signups = None
+    if sign_ups.count() > 0:
+      latest_signups = SignUp.objects.latest('start_date')
+
     return direct_to_template(request, 'txsched/index.html', {'sign_ups':
             sign_ups, 'latest_signups': latest_signups})
 
 def sign_up_admin(request, sign_up_id):
     sign_up = get_object_or_404(SignUp, pk=sign_up_id)
     latest_signups = SignUp.objects.latest('start_date')
-    
+
     return direct_to_template(request, 'txsched/sign_up_admin.html',
             {'sign_up': sign_up, 'latest_signups': latest_signups})
 
 def schedule(request, schedule_id, sign_up_id):
     schedule = get_object_or_404(Schedule, pk=schedule_id)
     sign_up = get_object_or_404(SignUp, pk=sign_up_id)
-  
+
     if request.POST.get('sign_up_position', None):
         # signing up for a position
         position = get_object_or_404(Position,
@@ -182,7 +184,7 @@ def schedule(request, schedule_id, sign_up_id):
                                     current_blocks
                                 shift_end = current + timedelta(minutes=(
                                     schedule.block_size * shift_length))
-                        
+
                         shifts = Shift.objects.filter(position=position,
                                 occurrence=sign_up.occurrence,
                                 start_date__gte=current,

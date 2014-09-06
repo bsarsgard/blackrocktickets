@@ -2,7 +2,15 @@
 {% block head %}
 {% endblock %}
 {% block title %}Home{% endblock %}
-{% block banner %}{{ current_site.name }}{% endblock %}
+{% block banner %}
+{% if events.count == 1 %}
+{% for event in events %}
+{{ event.label }}
+{% endfor %}{# event #}
+{% else %}
+{{ current_site.name }}
+{% endif %}
+{% endblock %}
 {% block lead %}
 {% if events.count == 1 %}
 {% for event in events %}

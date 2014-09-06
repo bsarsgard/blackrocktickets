@@ -85,7 +85,10 @@ $(document).ready(function() {
               {{ form.password|addcss:'form-control' }}
             </div>
             <div class="form-group">
+              {% if request.is_secure %}
+              {% else %}
               <p>Warning: this site is not SSL protected so password will be transmitted in plain text.  Don't do anything stupid like using the same password as your online banking.</p>
+              {% endif %}
               <button class="btn btn-success pull-right" onclick="if (validate('new_account', 'id_username')) { document.new_account.submit(); }">New Account</button>
             </div>
           </fieldset>
