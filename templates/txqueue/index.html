@@ -219,6 +219,7 @@
         <div class="col-lg-12">
           <div class="bs-component">
             <p>
+              {% if tier.ticket_count_finished %}
               There are
               <span class="label label-info">{{ tier.cap|sub:tier.ticket_count_paid|sub:tier.ticket_count_finished|sub:tier.ticket_count_started }}</span>
               tickets remaining, so at an average of
@@ -226,6 +227,7 @@
               tickets per purchase,
               <span class="label label-info">{{ tier.cap|sub:tier.ticket_count_paid|sub:tier.ticket_count_finished|sub:tier.ticket_count_started|div:tier.average_tickets }}</span>
               more people should get tickets.
+              {% endif %}{# tier.ticket_count_finished #}
             </p>
           </div>
         </div>
@@ -257,6 +259,7 @@
       <div class="row">
         <div class="col-lg-6">
           <div class="well">
+            <p><em>Note: everything you read in here is false.</em></p>
             <form action="/q/?code={{ reservation.code }}#chat" method="post">
               <div class="form-group">
                 <div class="input-group panel-nick">

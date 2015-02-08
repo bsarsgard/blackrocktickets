@@ -16,6 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from tickets.texas.models import *
+from tickets.txqueue.models import *
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django import forms
@@ -58,3 +59,4 @@ admin.site.register(Payment)
 admin.site.register(Reservation, ReservationModel)
 admin.site.register(Comp)
 admin.site.register(Option)
+admin.site.register(QueuedTier)
