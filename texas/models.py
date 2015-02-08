@@ -117,17 +117,22 @@ class Occurrence(models.Model):
         return Tier.objects.filter(occurrence=self,
                 start_date__lte=datetime.now(), end_date__gte=datetime.now())
 
-    """
-    def get_reservation_tiers(self, user):
-        reservations = Reservation.objects.filter(occurrence=self,
-                email=user.email)
-        purchased_tickets = Ticket.objects.filter(purchase__user=user,
-                purchase__occurrence=occurrence)
-        if reservations.count() > purchase_tickets.count():
-            return Tier.objects.filter(occurrence=self,
-                    start_date__lte=datetime.now(),
-                    end_date__gte=datetime.now(), reservation_required=True)
-    """
+    def get_purchase_count(self):
+        return self.purchase_set.filter(status='P').count()
+
+    def get_average_purchase(self):
+        return float(self.get_tickets_purchased()) /\
+                float(self.get_purchase_count())
+
+    def get_purchase_counts(self):
+        counts = {}
+        for purchase in self.purchase_set.filter(status='P'):
+            tx = purchase.ticket_set.count()
+            if tx in counts:
+                counts[tx] += 1
+            else:
+                counts[tx] = 1
+        return counts
 
     def __unicode__(self):
         return "%s, %s" % (self.event.__unicode__(), self.label)

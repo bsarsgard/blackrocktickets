@@ -4,9 +4,10 @@
     <title>{% block title %}{% endblock %} | {{ current_site.name }}</title>
     <meta name="keywords" content="Burning Man, Playa del Fuego, Tickets, Barcode, Event, Ticketing" />
     <meta name="description" content="Black Rock Tickets, a free and open source event ticketing solution" />
-    <link rel="stylesheet" href="/media/bs/darkly/bootstrap.min.css" media="screen">
+    <link rel="stylesheet" href="/media/bs/{% block theme %}darkly{% endblock %}/bootstrap.min.css" media="screen">
     <link rel="stylesheet" href="/media/bs/bootswatch.min.css" media="screen">
-    <link type="text/css" href="/media/css/ui-darkness/jquery-ui-1.8.4.custom.css" rel="Stylesheet" />	
+    <!--<link type="text/css" href="/media/css/ui-darkness/jquery-ui-1.8.4.custom.css" rel="Stylesheet" />	-->
+    <link type="text/css" href="/media/jquery-ui-1.11.0/jquery-ui.min.css" rel="Stylesheet" />	
     {% block head %}{% endblock %}
   </head>
   <body>
@@ -24,11 +25,11 @@
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
           {% block main_menu %}
           <ul class="nav navbar-nav">
-            <li><a href="/" class="active"><span></span>Home</a></li>
-            <li><a href="/buy/"><span></span>Buy Tickets</a></li>
-            <li><a href="/schedules/"><span></span>Volunteer Schedules</a></li>
-            <li><a href="/about/"><span></span>About</a></li>
-            <li><a href="/contact/"><span></span>Contact</a></li>
+            <li><a href="/" class="active">Home</a></li>
+            <li><a href="/buy/">Buy Tickets</a></li>
+            <li><a href="/schedules/">Volunteer Schedules</a></li>
+            <li><a href="/about/">About</a></li>
+            <li><a href="/contact/">Contact</a></li>
           </ul>   
           {% endblock %}
           {% if request.user.is_authenticated %}
@@ -39,16 +40,10 @@
                 <li><a href="/tickets/">My Tickets</a></li>
                 <li><a href="/buy/purchases/">Current Purchases</a></li>
                 <li><a href="/password_change/">Change Password</a></li>
+                {% if request.user.event_set.exists or request.user.signup_set.exists %}
                 <li class="divider"></li>
-                {% for event in request.user.event_set.all %}
-                <li><a href="/events/{{ event.id }}/admin/">{{ event }} Admin</a></li>
-                {% endfor %}
-                {% for sign_up in request.user.signup_set.all %}
-                <li><a href="/schedules/sign_up/{{ sign_up.id }}/admin/">{{ sign_up.occurrence.label }} Admin</a></li>
-                {% endfor %}
-                {% for schedule in request.user.schedule_set.all %}
-                <li><a href="/schedules/{{ schedule.id }}/{{latest_signups.id}}/">{{ schedule.label }} Admin</a></li>
-                {% endfor %}
+                <li><a href="/a/">Admin Dashboard</a></li>
+                {% endif %}
                 <li class="divider"></li>
                 <li><a href="/logout/">Logout</a></li>
               </ul>
@@ -70,6 +65,7 @@
       <div class="page-header" id="banner">
         <div class="row">
           <div class="col-lg-9">
+            {% block breadcrumb %}{% endblock %}
             <h1>{% block banner %}{% endblock %}</h1>
             <p class="lead">
               {% block lead %}{% endblock %}
@@ -84,44 +80,29 @@
             {% if request.user.is_authenticated %}
             <div class="panel panel-default">
               <div class="panel-heading">Control Panel</div>
-                <div class="panel-body">
+              <div class="panel-body">
                 {% block left_bar %}
                 <ul class="nav nav-pills nav-stacked">
                   <li>
                     <a href="/tickets/">
                       My Tickets
-                      {% get_ticket_count request.user %}
+                      <span class="pull-right">{% get_ticket_count request.user %}</span>
                     </a>
                   </li>
                   <li>
                     <a href="/buy/purchases/">
                       Current Purchases
-                      {% get_order_count request.user %}
+                      <span class="pull-right">{% get_order_count request.user %}</span>
                     </a>
                   </li>
                   <li><a href="/password_change/">Change Password</a></li>
-                  <li><a href="/logout/">Logout</a></li>
-                  {% if request.user.event_set.count > 0 or request.user.signup_set.count > 0 or request.user.schedule_set.count > 0 %}
-                  <li class="dropdown">
-                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                      Admin <span class="caret"></span>
-                    </a>
-                    <ul class="dropdown-menu">
-                      {% for event in request.user.event_set.all %}
-                      <li><a href="/events/{{ event.id }}/admin/">{{ event }}</a></li>
-                      {% endfor %}
-                      {% for sign_up in request.user.signup_set.all %}
-                      <li><a href="/schedules/sign_up/{{ sign_up.id }}/admin/">{{ sign_up.occurrence.label }}</a></li>
-                      {% endfor %}
-                      {% for schedule in request.user.schedule_set.all %}
-                      <li><a href="/schedules/{{ schedule.id }}/{{latest_signups.id}}/">{{ schedule.label }}</a></li>
-                      {% endfor %}
-                    </ul>
-                  </li>
+                  {% if request.user.event_set.exists or request.user.signup_set.exists %}
+                  <li><a href="/a/">Admin Dashboard</a></li>
                   {% endif %}
+                  <li><a href="/logout/">Logout</a></li>
                 </ul>
                 {% endblock %}
-              </div>
+              </div><!-- panel-body -->
             </div>
             {% endif %}
           </div>
@@ -146,9 +127,20 @@
     </div>
 
     <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
-    <!--<script type="text/javascript" src="/media/js/jquery-ui-1.8.4.custom.min.js"></script>-->
     <script type="text/javascript" src="/media/jquery-ui-1.11.0/jquery-ui.min.js"></script>
     <script src="/media/bs/bootstrap.min.js"></script>
+    <script type="text/javascript">
+      $(document).ready(function () {
+        var url = window.location;
+        // Will only work if string in href matches with location
+        $('ul.nav a[href="' + url + '"]').parent().addClass('active');
+
+        // Will also work for relative and absolute hrefs
+        $('ul.nav a').filter(function () {
+          return this.href == url;
+        }).parent().addClass('active');
+      });
+    </script>
     {% block script %}
     {% endblock %}
   </body>

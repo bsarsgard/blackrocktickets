@@ -246,15 +246,12 @@ def donate_instantpaymentnotification(request):
             'texas/donate_instantpaymentnotification.html')
 
 def buy(request):
-    occurrences = Occurrence.objects.all().exclude(pk=11)
+    occurrences = Occurrence.objects.filter(end_date__gte=datetime.now())
     if request.method == 'POST':
         # form submission
         return do_buy(request, occurrences)
     else:
         show = request.GET.get('show', '')
-        for occurrence in occurrences:
-            for tier in occurrence.tier_set.all():
-                foo = tier.get_ticket_range()
         code = None
         need_code = False
         for occurrence in occurrences:

@@ -4,14 +4,25 @@
 {% block title %}Buy Tickets{% endblock %}
 {% block banner %}Buy Tickets{% endblock %}
 {% block lead %}
+{% if occurrences %}
 {% ifequal occurrences.count 1 %}
 {% for occurrence in occurrences %}
 {{ occurrence }}
 {% endfor %}
 {% else %}
-All Active Events
+{% ifequal occurrences.count 0 %}
+No Sales Available
+{% else %}
+Found {{ occurrences.count }} Events
 {% endifequal %}
+{% endifequal %}
+{% else %}
+No Events Found
+{% endif %}
 {% endblock %}
+
+{% block purchases %}{% endblock %}
+
 {% block alerts %}
 {% if error %}
 <div class="alert alert-dismissable alert-danger">
@@ -20,14 +31,14 @@ All Active Events
 </div>
 {% endif %}
 {% endblock %}
+
 {% block content %}
 {% for occurrence in occurrences %}
-{% if occurrence.get_active_tiers %}
 <div class="row">
   <div class="col-lg-6">
     {% ifnotequal occurrences.count 1 %}
     <h2>{{ occurrence }}</h2>
-    {% endifnotequal %}
+    {% endifnotequal %}{# occurrences.count 1 #}
     {% for tier in occurrence.get_active_tiers %}
     {% if tier.password == "" or show == 'show' %}
     <div class="panel panel-primary">
@@ -41,7 +52,7 @@ All Active Events
           {% if tier.use_queue and not code %}
           <p>This tier uses a queuing system.</p>
           <p><a href="{{ queue_url }}">Click here to enter the queue.</a></p>
-          {% else %}
+          {% else %}{# tier.use_queue and not code #}
           {% ifnotequal tier.get_tickets_available 0 %}
           <input type="hidden" name="code" id="code" value="{{ code }}" />
           {% if occurrence.allow_donations %}
@@ -49,21 +60,24 @@ All Active Events
             <label>Optional donation</label>
             <input type="text" id="donation_{{ tier.id }}" name="donation_{{ tier.id }}" class="form-control" />
           </div>
-          {% endif %}
+          {% endif %}{# occurrence.allow_donations #}
           <div class="form-group">
             <label>Tickets</label>
             <select id="tickets_{{ tier.id }}" name="tickets_{{ tier.id }}" class="form-control">
               {% for ticket_quantity in tier.get_ticket_range %}
               <option value="{{ ticket_quantity }}">{{ ticket_quantity }}</option>
-              {% endfor %}
+              {% endfor %}{# ticket_quantity in tier.get_ticket_range #}
             </select>
           </div>
           <div class="form-group">
             <strong>
-              Price <span class="badge">${{ tier.price }}
-              {% if occurrence.event.paypal_currency %}
-              ({{ occurrence.event.paypal_currency }})
-              {% endif %}</span>
+              Price
+              <span class="badge">
+                ${{ tier.price }}
+                {% if occurrence.event.paypal_currency %}
+                ({{ occurrence.event.paypal_currency }})
+                {% endif %}{# occurrence.event.paypal_currency #}
+              </span>
             </strong>
           </div>
           {% ifnotequal tier.password "" %}
@@ -72,7 +86,7 @@ All Active Events
             <label>Password</label>
             <input type="text" id="password_{{ tier.id }}" name="password_{{ tier.id }}" class="form-control" />
           </div>
-          {% endifnotequal %}
+          {% endifnotequal %}{# tier.password "" #}
           {% if occurrence.options %}
           {% for option in occurrence.options.all %}
           <div class="form-group">
@@ -87,28 +101,40 @@ All Active Events
             <p style="margin-left: 25px;">
               <em>{{ option.description }}</em>
             </p>
-            {% endif %}
+            {% endif %}{# option.description #}
           </div>
-          {% endfor %}
-          {% endif %}
+          {% endfor %}{# option in occurrence.options.all #}
+          {% endif %}{# occurrence.options #}
           {% if occurrence.coupons.all %}
           <div class="form-group">
             <label>Coupon Code</label>
             <input type="text" id="coupon" name="coupon" class="form-control" />
           </div>
-          {% endif %}
+          {% endif %}{# occurrence.coupons.all #}
           <div class="form-group">
             <a href="#" onclick="document.buy_tickets{{ tier.id }}.submit();" class="btn btn-primary btn-large">Buy Now</a>
           </div>
-          {% else %}
+          {% else %}{# tier.get_tickets_available 0 #}
           <strong>This tier is currently Sold Out.</strong>
-          {% endifnotequal %}
-          {% endif %}
+          {% endifnotequal %}{# tier.get_tickets_available 0 #}
+          {% endif %}{# tier.use_queue and not code #}
         </form>
       </div>
     </div>
-    {% endif %}
-    {% endfor %}
+    {% endif %}{# tier.password == "" or show == 'show' #}
+    {% empty %}{# tier occurrence.get_active_tiers #}
+    <div class="alert alert-info">Ticket sales for this event are not currently active.</div>
+    {% endfor %}{# tier occurrence.get_active_tiers #}
+    {% if occurrence.get_future_tiers %}
+    <p class="lead">Please check back later for the following ticket sales:</p>
+    <div class="list-group">
+    {% for tier in occurrence.get_future_tiers %}
+      <div class="list-group-item">
+        <h4 class="list-group-item-heading">{{ tier.label }}</h4>
+        <p class="list-group-item-text">{{ tier.start_date|date:"D, d M Y, P" }} ({{ tier.start_date|timeuntil }})<br/>&nbsp;&nbsp;&nbsp;&nbsp;{{ tier.cap|default_if_none:"Unlimited" }} tickets - ${{ tier.price }}</p>
+      </div>
+    {% endfor %}{# tier in occurrence.get_future_tiers #}
+    </div>
   </div>
   <div class="col-lg-6">
     <div class="well text-center">
@@ -116,23 +142,6 @@ All Active Events
     </div>
   </div>
 </div>
-{% else %}
-{% if occurrence.get_future_tiers %}
-<div class="row">
-  <div class="col-lg-12">
-    <h1 class="page-header">{{ occurrence }}</h1>
-  </div>
-</div>
-<p class="lead">Please check back later for the following ticket sales:</p>
-<div class="list-group">
-{% for tier in occurrence.get_future_tiers %}
-  <div class="list-group-item">
-    <h4 class="list-group-item-heading">{{ tier.label }}</h4>
-    <p class="list-group-item-text">{{ tier.start_date|date:"D, d M Y, P" }} ({{ tier.start_date|timeuntil }})<br/>&nbsp;&nbsp;&nbsp;&nbsp;{{ tier.cap|default_if_none:"Unlimited" }} tickets - ${{ tier.price }}</p>
-  </div>
-{% endfor %}
-</div>
-{% endif %}
-{% endif %}
-{% endfor %}
-{% endblock %}
+{% endif %}{# occurrence.get_future_tiers #}
+{% endfor %}{# occurrence #}
+{% endblock %}{# content #}

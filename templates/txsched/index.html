@@ -1,14 +1,4 @@
 {% extends "base.html" %}
-{% block head %}
-<style>
-.column_w430 {
-	width: 600px;
-}
-.column_w210 {
-	width: 240px;
-}
-</style>
-{% endblock %}
 {% block title %}Volunteer Schedules{% endblock %}
 {% block banner %}Volunteer Schedules{% endblock %}
 {% block lead %}Sign up early, sign up often!{% endblock %}
@@ -20,5 +10,7 @@
   <a class="list-group-item" href="{{ schedule.id }}/{{ sign_up.id }}/">{{ schedule }}</a>
   {% endfor %}
 </div>
+{% empty %}
+<h2>No schedules found</h2>
 {% endfor %}
 {% endblock %}

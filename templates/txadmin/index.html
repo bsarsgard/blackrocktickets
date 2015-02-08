@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block head %}
+{% endblock %}
+{% block title %}Admin{% endblock %}
+{% block banner %}Admin Dashboard{% endblock %}
+{% block lead %}
+{% if user.event_set.count == 1 %}
+{% for event in user.event_set.all %}
+{{ event.label }}
+{% endfor %}
+{% else %}
+All events
+{% endif %}
+{% endblock %}
+{% block alerts %}
+{% for occurrence in occurrences_active %}
+<div class="panel panel-info">
+  <div class="panel-heading">{{ occurrence }}</div>
+  <div class="panel-body">
+    <div class="btn-group btn-group-justified">
+      <a href="/occurrences/{{ occurrence.id }}/admin/ticket_list/" class="btn btn-default">Ticket Listing</a>
+      <a href="/a/occurrence/{{ occurrence.id }}/stats/" class="btn btn-default">Stats</a>
+      <a href="/occurrences/{{ occurrence.id }}/admin/option_list/" class="btn btn-default">Options List</a>
+      <a href="/occurrences/{{ occurrence.id }}/admin/sale/" class="btn btn-default">Cash Sale</a></li>
+      <a href="/occurrences/{{ occurrence.id }}/admin/ticket_export/" class="btn btn-default">XML Export</a>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}
+{% block content %}
+{% if occurrences_old %}
+{% for occurrence in occurrences_old %}
+<div class="panel panel-default">
+  <div class="panel-heading">{{ occurrence }}</div>
+  <div class="panel-body">
+    <div class="btn-group btn-group-justified">
+      <a href="/occurrences/{{ occurrence.id }}/admin/ticket_list/" class="btn btn-default">Ticket Listing</a>
+      <a href="/a/occurrence/{{ occurrence.id }}/stats/" class="btn btn-default">Stats</a>
+      <a href="/occurrences/{{ occurrence.id }}/admin/option_list/" class="btn btn-default">Options List</a>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% endif %}
+{% endblock %}
