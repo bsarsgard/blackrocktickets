@@ -239,7 +239,7 @@ class Purchase(models.Model):
             return 'info'
         elif self.status == 'P':
             return 'success'
-        elif self.statur == 'D':
+        elif self.status == 'D':
             return 'warning'
         else:
             return 'default'
