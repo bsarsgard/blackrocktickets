@@ -54,7 +54,7 @@ No Events Found
           <p><a href="{{ queue_url }}">Click here to enter the queue.</a></p>
           {% else %}{# tier.use_queue and not code #}
           {% ifnotequal tier.get_tickets_available 0 %}
-          <input type="hidden" name="code" id="code" value="{{ code }}" />
+          <input type="hidden" name="code" id="code" value="{{ code|default_if_none:"" }}" />
           {% if occurrence.allow_donations %}
           <div class="form-group">
             <label>Optional donation</label>
