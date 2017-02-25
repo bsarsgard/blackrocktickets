@@ -31,3 +31,26 @@ def occurrence_stats(request, occurrence_id):
     return direct_to_template(request,
             'txadmin/occurrence/stats.html',
             {'occurrence': occurrence, 'tickets': tickets })
+
+def occurrence_purchases(request, occurrence_id):
+    occurrence = get_object_or_404(Occurrence, pk=occurrence_id)
+    if not request.user in occurrence.event.admins.all():
+        return direct_to_template(request, 'texas/error.html',
+            {'message': "Not logged in or lacking admin privileges"})
+
+    purchases = Purchase.objects.filter(occurrence=occurrence)
+
+    return direct_to_template(request,
+            'txadmin/occurrence/purchases.html',
+            {'occurrence': occurrence, 'purchases': purchases })
+
+def purchase_delete(request, purchase_id):
+    purchase = get_object_or_404(Purchase, pk=purchase_id)
+    if not request.user in purchase.occurrence.event.admins.all():
+        return direct_to_template(request, 'texas/error.html',
+            {'message': "Not logged in or lacking admin privileges"})
+    purchase.status = 'D'
+    purchase.save()
+
+    return redirect_to(request,
+            '/a/occurrence/%i/purchases/' % purchase.occurrence_id)

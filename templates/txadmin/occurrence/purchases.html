@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block breadcrumb %}
+<ol class="breadcrumb">
+  <li><a href="/a/">Admin</a></li>
+  <li>{{ occurrence }}</li>
+  <li class="active">Purchases</li>
+</ol>
+{% endblock %}
+{% block head %}
+{% endblock %}
+{% block title %}{{ occurrence }} Purchases{% endblock %}
+{% block banner %}Purchases{% endblock %}
+{% block lead %}{{ occurrence }}{% endblock %}
+{% block alerts %}
+<div class="well well-lg">
+  <div class="row">
+    <div class="col-md-6">
+      <div class="alert alert-info">
+        <strong>Tickets: </strong> <span class="badge">{{ occurrence.get_tickets_purchased }}</span>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="alert alert-info">
+        <strong>Cap: </strong> <span class="badge">{{ occurrence.cap }}</span>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <div class="alert alert-info">
+        <strong>Purchases: </strong> <span class="badge">{{ occurrence.get_purchase_count }}</span>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="alert alert-info">
+        <strong>Average Purchase: </strong> <span class="badge">{{ occurrence.get_average_purchase|floatformat }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <table class="table table-striped table-hover ">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Email</th>
+          <th>Status</th>
+          <th>Tickets</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for purchase in purchases %}
+        <tr class="{{ purchase.get_status_tag }}">
+          <td>{{ purchase.id }}</td>
+          <td>{{ purchase.user.email }}</td>
+          <td>{{ purchase.status }}</td>
+          <td>{{ purchase.ticket_set.count }}</td>
+          <td><a href="/a/purchase/{{ purchase.id }}/delete" class="btn btn-danger">Delete</a>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

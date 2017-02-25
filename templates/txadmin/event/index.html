@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block head %}
+{% endblock %}
+{% block title %}Admin | {{ event.label }}{% endblock %}
+{% block banner %}{{ event.label }} Admin{% endblock %}
+{% block lead %}
+<h2>Admins</h2>
+<ul class="list-group">
+  {% for user in event.admins.all %}
+  <li class="list-group-item">
+    {{ user.first_name }} {{ user.last_name }} &lt;{{ user.username }}&gt;
+    {% ifnotequal user request.user %}
+    <a href="/a/event/{{ event.id }}/admin/{{ user.id }}/delete/" class="btn btn-xs btn-danger pull-right">
+      <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+    </a>
+    {% endifnotequal %}
+  </li>
+  {% endfor %}
+</ul>
+<form class="form-inline" action="admin/new/" method="post">
+  <div class="form-group">
+    <label for="email">Email</label>
+    <input type="text" class="form-control" id="email" name="email" />
+  </div>
+  <button type="submit" class="btn btn-default">Add Admin</button>
+</form>
+{% endblock %}
+{% block alerts %}
+{% endblock %}
+{% block content %}
+{% endblock %}
