@@ -7,7 +7,7 @@ admin.autodiscover()
 urlpatterns = patterns('',
     # Example:
     # (r'^tickets/', include('tickets.foo.urls')),
-    (r'^', include('tickets.texas.urls')),
+    (r'^', include('tickets.txqueue.urls')),
     (r'^schedules/', include('tickets.txsched.urls')),
     (r'^q/', include('tickets.txqueue.urls')),
     (r'^a/', include('tickets.txadmin.urls')),

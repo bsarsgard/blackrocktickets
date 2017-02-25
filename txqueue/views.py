@@ -69,6 +69,9 @@ def index(request):
     if res and 'message' in request.POST and 'nick' in request.POST:
         if (res.nick != request.POST['nick']):
             res.nick = request.POST['nick']
+            if 'ben' in res.nick.lower() or 'sarsgard' in res.nick.lower():
+                if not 'fake' in res.nick.lower():
+                    res.nick = "Fake %s" % res.nick
             res.save()
         if len(request.POST['message']) > 0:
             message = ChatMessage(reservation=res,
@@ -167,7 +170,7 @@ def index(request):
             res.save()
             update_stats(res.queued_tier)
 
-    since_start = datetime.now() - res.reserved
+    since_start = datetime.now() - tier.starts
     min_since = timedelta(minutes=1)
     is_started = False
     wait_message = ""
@@ -192,7 +195,8 @@ def index(request):
             "revving harleys ...",
         ])
 
-    return_url = settings.QUEUE_RETURN_URL
+    #return_url = settings.QUEUE_RETURN_URL
+    return_url = tier.url
     response = direct_to_template(request, 'txqueue/index.html',
             {"reservation": res, "active": active, "in_queue": in_queue,
                 "ahead": ahead, "pony": pony, "return_url": return_url,

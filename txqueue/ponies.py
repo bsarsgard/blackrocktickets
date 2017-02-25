@@ -344,11 +344,19 @@ vary.
 ""","""
 If it didn't come from your body, don't put it in the potty. Also, if you're
 not in a potty, please keep it IN your body.
-
 ""","""
 There are no public trash cans.
 ""","""
 Massive changes at the gate. It's all good, but
 entirely different. There will now be Official Greeting and Tickets will be
 processed only at certain times. Details on the PONY at the pdf site.
+""","""
+Here is the new Gate hours for Spring PDF 2017.
+
+   *Thursday 5:00 PM - Friday 12:00 AM
+   *Friday 9:00 AM - Saturday 12:00 AM
+   *Saturday 9:00 AM - Saturday 6:00 PM
+   *Sunday 9:00 AM - Sunday 6:00 PM
+""","""
+There will be NO DUMPSTERS at the event! Pack it in, pack it out!
 """]

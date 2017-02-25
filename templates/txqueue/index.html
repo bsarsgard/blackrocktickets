@@ -1,7 +1,7 @@
 {% load math %}
 <html>
   <head>
-    <title>Ticket Queue{% if ahead %} - {{ ahead }}{% endif %}</title>
+    <title>Ticket Queue{% if is_started %}{% if ahead %} - {{ ahead }}{% endif %}{% endif %}</title>
     <link rel="stylesheet" href="/media/bs/amelia/bootstrap.min.css" media="screen">
     <link rel="stylesheet" href="/media/bs/bootswatch.min.css" media="screen">
   </head>
@@ -11,8 +11,10 @@
         <div class="navbar-header">
           <a href="#" class="navbar-brand">
             Ticket Queue
+            {% if is_started %}
             {% if ahead %}
             <span class="badge">{{ ahead }}</span>
+            {% endif %}
             {% endif %}
           </a>
         </div>
@@ -81,7 +83,7 @@
         </div>
         <div class="row">
           <div class="col-lg-12">
-            <h3><em>Hold onto your butts.</em></h3>
+            <h3><em>Are you ready for this?</em></h3>
             <p>This page will automatically refresh in <span class="badge" id="countdown">30</span> seconds if javascript is enabled.
           </div>
         </div>
@@ -177,7 +179,8 @@
           <div class="alert alert-success">
             <h2>The ticket system will see you now</h2>
             <p>
-              <a class="btn btn-primary btn-lg" href="{{ return_url }}/?code={{ reservation.code }}">Click here to proceed</a>
+            <!--<a class="btn btn-primary btn-lg" href="{{ return_url }}/?code={{ reservation.code }}">Click here to proceed</a>-->
+              <a class="btn btn-primary btn-lg" href="http://tickets.playadelfuego.org/buy/14/?code={{ reservation.code }}">Click here to proceed</a>
             </p>
           </div>
         </div>
