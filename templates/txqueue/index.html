@@ -47,7 +47,11 @@
         <div class="col-lg-8 col-md-7 col-sm-6">
           <div class="page-header" id="banner">
             <h1>Queue is closing down</h1>
+            {% if tier.ticket_count_paid|add:tier.ticket_count_finished >= tier.cap %}
             <p class="lead">There may be tickets in the next 15 minutes from  expired unpaid orders, so it couldn't hurt to check back at <a href="{{ tier.url }}">The Ticket Sales Site</a> and give it a try.</p>
+            {% else %}
+            <p class="lead">There may be tickets in the next 15 minutes from  expired unpaid orders, so it couldn't hurt to hang around a bit if your number is low</p>
+            {% endif %}
           </div>
         </div>
       </div>
@@ -174,8 +178,7 @@
           <div class="alert alert-success">
             <h2>The ticket system will see you now</h2>
             <p>
-            <!--<a class="btn btn-primary btn-lg" href="{{ return_url }}/?code={{ reservation.code }}">Click here to proceed</a>-->
-              <a class="btn btn-primary btn-lg" href="http://tickets.playadelfuego.org/buy/14/?code={{ reservation.code }}">Click here to proceed</a>
+              <a class="btn btn-primary btn-lg" href="{{ return_url }}/?code={{ reservation.code }}">Click here to proceed</a>
             </p>
           </div>
         </div>

@@ -171,7 +171,7 @@ def index(request):
             update_stats(res.queued_tier)
 
     since_start = datetime.now() - tier.starts
-    min_since = timedelta(minutes=1)
+    min_since = timedelta(minutes=2)
     is_started = False
     wait_message = ""
     if since_start > min_since:
