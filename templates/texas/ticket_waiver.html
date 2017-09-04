@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block head %}
+{% endblock %}
+{% block title %}Sign Waiver{% endblock %}
+{% block banner %}Sign Waiver{% endblock %}
+{% block lead %}Please complete to continue{% endblock %}
+{% block purchases %}{% endblock %}
+{% block alerts %}
+<form method="post">
+<div class="panel panel-info">
+    <div class="panel-heading">{{ ticket.purchase.occurrence }}</div>
+  <div class="panel-body">
+
+{% include ticket.purchase.occurrence.event.waiver %}
+
+<button type="submit" class="btn btn-primary" onclick="return check_form()">Sign</a>
+  </div>
+</div>
+</form>
+{% endblock %}

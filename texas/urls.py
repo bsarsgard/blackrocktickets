@@ -32,6 +32,8 @@ urlpatterns = patterns('',
     (r'^tickets/$', 'tickets.texas.views.tickets'),
     (r'^tickets/print/(?P<ticket_id>\d+)/$',
         'tickets.texas.views.ticket_print'),
+    (r'^tickets/waiver/(?P<ticket_id>\d+)/$',
+        'tickets.texas.views.ticket_waiver'),
 
     (r'^donate/thanks/$', 'tickets.texas.views.donate_thanks'),
     (r'^donate/ohwell/$', 'tickets.texas.views.donate_ohwell'),

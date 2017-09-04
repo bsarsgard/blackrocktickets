@@ -598,6 +598,7 @@ def tickets(request):
                     assigned_user.save()
 
                 ticket.assigned_user = assigned_user
+                ticket.waiver = None
                 #ticket.set_code()
                 ticket.save()
                 do_send_transfer_notification(ticket)
@@ -613,6 +614,12 @@ def tickets(request):
     ).exclude(
             purchase__occurrence__end_date__lte=datetime.now()
     )
+
+    for ticket in assigned_tickets:
+        if ticket.purchase.occurrence.event.waiver and not ticket.waiver:
+            # break on the first one found
+            return redirect_to(request, '/tickets/waiver/%s/' % ticket.id)
+
     return direct_to_template(request, 'texas/tickets.html',
             {'paid_purchases': paid_purchases,
                     'assigned_tickets': assigned_tickets})
@@ -700,6 +707,25 @@ def ticket_print(request, ticket_id):
             {'message': "This ticket is assigned to another user"})
     else:
         return direct_to_template(request, 'texas/ticket_print.html',
+                {'ticket': ticket})
+
+def ticket_waiver(request, ticket_id):
+    ticket = Ticket.objects.get(pk=ticket_id)
+    if ticket.assigned_user is None and\
+		 ticket.purchase.user != request.user and\
+		 not request.user.is_superuser:
+        return direct_to_template(request, 'texas/error.html',
+            {'message': "Not logged in or order does not match logged in user"})
+    elif ticket.assigned_user is not None and\
+		 ticket.assigned_user != request.user:
+        return direct_to_template(request, 'texas/error.html',
+            {'message': "This ticket is assigned to another user"})
+    elif request.method == 'POST':
+        ticket.waiver = str(request.POST)
+        ticket.save()
+        return redirect_to(request, "/tickets/")
+    else:
+        return direct_to_template(request, 'texas/ticket_waiver.html',
                 {'ticket': ticket})
 
 def paypal_return(request):
