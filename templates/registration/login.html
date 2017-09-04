@@ -25,9 +25,9 @@ $(document).ready(function() {
 {% block purchases %}{% endblock %}
 {% block alerts %}
 {% if message %}
-<div class="alert alert-dismissable alert-danger">
+<div class="alert alert-dismissable alert-info">
   <button type="button" class="close" data-dismiss="alert">×</button>
-  <strong>Error: </strong>{{ message }}
+  {{ message }}
 </div>
 {% endif %}
 {% for error in form.errors %}
@@ -50,6 +50,7 @@ $(document).ready(function() {
           <fieldset>
             <legend>Please enter your email address password and click "Login."</legend>
             <div class="form-group">
+              <input type="hidden" name="next" id="next" value="{{ next_url }}" />
               <input type="hidden" name="login_is_new" id="login_is_new" value="0" />
               {{ form.username.label_tag }}
               {{ form.username|addcss:'form-control' }}
@@ -76,6 +77,7 @@ $(document).ready(function() {
           <fieldset>
             <legend>To create a new account, enter your email address and choose a password below, then click "New Account."</legend>
             <div class="form-group">
+              <input type="hidden" name="next" id="next" value="{{ next_url }}" />
               <input type="hidden" name="login_is_new" id="login_is_new" value="1" />
               {{ form.username.label_tag }}
               {{ form.username|addcss:'form-control' }}

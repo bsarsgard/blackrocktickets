@@ -33,6 +33,8 @@ No Events Found
 {% endblock %}
 
 {% block content %}
+<form id="buy_tickets" name="buy_tickets" method="post">
+          <input type="hidden" name="code" id="code" value="{{ code|default_if_none:"" }}" />
 {% for occurrence in occurrences %}
 <div class="row">
   <div class="col-lg-6">
@@ -40,21 +42,31 @@ No Events Found
     <h2>{{ occurrence }}</h2>
     {% endifnotequal %}{# occurrences.count 1 #}
     {% for tier in occurrence.get_active_tiers %}
-    {% if tier.password == "" or show == 'show' %}
+    {% if show == 'show' or tier.password == "" and not tier.require_code %}
     <div class="panel panel-primary">
       <div class="panel-heading">{{ tier.label }}</div>
       <div class="panel-body">
-        <form id="buy_tickets{{ tier.id }}" name="buy_tickets{{ tier.id }}" method="post">
+        <!--form id="buy_tickets{{ tier.id }}" name="buy_tickets{{ tier.id }}" method="post"-->
           <input type="hidden" id="occurrence_id" name="occurrence_id" value="{{ occurrence.id }}" />
           <p>
             {{ tier.description|safe }}
           </p>
           {% if tier.use_queue and not code %}
+          {% if not tier.require_code %}
           <p>This tier uses a queuing system.</p>
           <p><a href="{{ queue_url }}">Click here to enter the queue.</a></p>
+          {% endif %}
+          {% else %}{% if tier.is_lottery and not code %}
+          {% if not tier.require_code %}
+          <p>This tier uses a lottery.</p>
+          {% if user.is_anonymous %}
+          <p><a href="/login/?next=/chance/{{ tier.id }}/">Login or create an account to continue.</a></p>
+          {% else %}
+          <p><a href="/chance/{{ tier.id }}/">Click here to enter the lottery.</a></p>
+          {% endif %}
+          {% endif %}
           {% else %}{# tier.use_queue and not code #}
           {% ifnotequal tier.get_tickets_available 0 %}
-          <input type="hidden" name="code" id="code" value="{{ code|default_if_none:"" }}" />
           {% if occurrence.allow_donations %}
           <div class="form-group">
             <label>Optional donation</label>
@@ -105,20 +117,15 @@ No Events Found
           </div>
           {% endfor %}{# option in occurrence.options.all #}
           {% endif %}{# occurrence.options #}
-          {% if occurrence.coupons.all %}
-          <div class="form-group">
-            <label>Coupon Code</label>
-            <input type="text" id="coupon" name="coupon" class="form-control" />
-          </div>
-          {% endif %}{# occurrence.coupons.all #}
-          <div class="form-group">
+          <!--div class="form-group">
             <a href="#" onclick="document.buy_tickets{{ tier.id }}.submit();" class="btn btn-primary btn-large">Buy Now</a>
-          </div>
+          </div-->
           {% else %}{# tier.get_tickets_available 0 #}
           <strong>This tier is currently Sold Out.</strong>
           {% endifnotequal %}{# tier.get_tickets_available 0 #}
+          {% endif %}{# tier.is_lottery and not code #}
           {% endif %}{# tier.use_queue and not code #}
-        </form>
+        <!--/form-->
       </div>
     </div>
     {% endif %}{# tier.password == "" or show == 'show' #}
@@ -143,5 +150,23 @@ No Events Found
   </div>
 </div>
 {% endif %}{# occurrence.get_future_tiers #}
+<div class="row">
+  <div class="col-lg-6">
+          {% if occurrence.coupons.all %}
+          <div class="form-group">
+            <label>Coupon Code</label>
+            <input type="text" id="coupon" name="coupon" class="form-control" />
+          </div>
+          {% endif %}{# occurrence.coupons.all #}
+  </div>
+</div>
 {% endfor %}{# occurrence #}
+<div class="row">
+  <div class="col-lg-6">
+          <div class="form-group">
+            <a href="#" onclick="document.buy_tickets.submit();" class="btn btn-primary btn-large">Buy Now</a>
+          </div>
+  </div>
+</div>
+</form>
 {% endblock %}{# content #}

@@ -59,20 +59,24 @@
 
       {% for tier in occurrence.get_active_tiers %}
       {% ifequal tier.password "" %}
+      {% if tier.require_code %}
+      {% else %}
       <a href="{% ifequal tier.get_tickets_available 0 %}#event-{{ event.id }}{% else %}/buy/{{ occurrence.id }}/{% endifequal %}" class="list-group-item">
         <h4 class="list-group-item-heading">{{ tier.label }}</h4>
         <p class="list-group-item-text">{{ tier.start_date|date:"D d M Y" }} - {{ tier.end_date|date:"d M" }}
           {% ifequal tier.get_tickets_available 0 %}
           <strong> *Sold Out*</strong>
-          {% else %}
-          {% if tier.use_queue %}
+          {% else %}{% if tier.use_queue %}
           <strong> *Queue Open Now*</strong>
+          {% else %}{% if tier.is_lottery %}
+          <strong> *Lottery Open Now*</strong>
           {% else %}
           <strong> *Open Now*</strong>
-          {% endif %}
+          {% endif %}{% endif %}
           {% endifequal %}
         </p>
       </a>
+      {% endif %}
       {% endifequal %}
       {% endfor %}
 

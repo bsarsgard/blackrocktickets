@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load texas_extras %}
+{% block head %}
+{% endblock %}
+{% block title %}{{ occurrence }} Lottery{% endblock %}
+{% block banner %}Lottery{% endblock %}
+{% block alerts %}
+{% if form.subject.errors %}
+    <ol>
+    {% for error in form.errors %}
+        <li><strong>{{ error|escape }}</strong></li>
+    {% endfor %}
+    </ol>
+{% endif %}
+{% if message %}
+<div class="alert alert-dismissable alert-info">
+  <button type="button" class="close" data-dismiss="alert">×</button>
+  <strong>{{ message }}</strong>
+</div>
+{% endif %}
+
+<div class="row well well-lg">
+{% if chance %}
+{% if chance.queue_code %}
+<p>You are cleared to purchase!</p>
+<p><a href="/buy/?code={{ chance.queue_code }}">Click here to purchase</a></p>
+{% else %}
+<p>Your entry has been submitted. Good luck!</p>
+<p>Name: {{ chance.name }}<br>
+Email: {{ chance.email }}</p>
+{% endif %}
+{% else %}
+{% for error in form.errors %}
+<div class="alert alert-dismissable alert-danger">
+  <button type="button" class="close" data-dismiss="alert">×</button>
+  <strong>Error: </strong>{{ error|escape }}
+</div>
+{% endfor %}
+<form method="post" name="sale_form" id="sale_form" class="form-horizontal">
+  <p>
+    Log into PayPal, then click on the gear icon in the upper right corner, or go to <a href="https://www.paypal.com/myaccount/settings/" target="_blank">https://www.paypal.com/myaccount/settings/</a>. Type the information below exactly as you see it on the screen in the examples below.
+  </p>
+  <p><em><strong>Only one entry is allowed per person!</strong> These entries will be audited and any duplicates found will result in both the original and duplicates being invalidated.</em></p>
+  <fieldset>
+    <legend>Lottery Details</legend>
+    <div class="form-group">
+      <img src="/media/img/texas/paypal_profile1.png"><br/>
+      {{ form.name.label_tag }}
+      {{ form.name|addcss:'form-control' }}
+    </div>
+    <div class="form-group">
+      <img src="/media/img/texas/paypal_profile2.png"><br/>
+      {{ form.email.label_tag }}
+      {{ form.email|addcss:'form-control' }}
+    </div>
+
+    <div class="form-group">
+      <div class="col-lg-10 col-lg-offset-2">
+        <button type="submit" class="btn btn-primary pull-right">Submit</button>
+      </div>
+    </div>
+  </fieldset>
+</form>
+</div>
+{% endif %}
+{% endblock %}

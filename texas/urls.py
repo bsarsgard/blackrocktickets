@@ -27,6 +27,8 @@ urlpatterns = patterns('',
     (r'^buy/amazon_instantpaymentnotification/$',
         'tickets.texas.views.amazon_ipn'),
 
+    (r'^chance/(?P<tier_id>\d+)/$', 'tickets.texas.views.chance_tier'),
+
     (r'^tickets/$', 'tickets.texas.views.tickets'),
     (r'^tickets/print/(?P<ticket_id>\d+)/$',
         'tickets.texas.views.ticket_print'),

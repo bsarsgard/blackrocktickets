@@ -2,3 +2,4 @@
 *.swp
 *.wsgi
 settings.py
+apache

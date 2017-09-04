@@ -34,8 +34,9 @@ class UserProfile(models.Model):
     city = models.CharField(max_length=50, blank=True, null=True)
     state = models.CharField(max_length=50, blank=True, null=True)
     zip_code = models.CharField(max_length=10, blank=True, null=True)
-    name = models.CharField(max_length=50, blank=True, null=True)
+    name = models.CharField(max_length=255, blank=True, null=True)
     nick_name = models.CharField(max_length=50, blank=True, null=True)
+    alternate_email = models.CharField(max_length=255, blank=True, null=True)
 
     def __unicode__(self):
         return self.user.__unicode__()
@@ -121,8 +122,12 @@ class Occurrence(models.Model):
         return self.purchase_set.filter(status='P').count()
 
     def get_average_purchase(self):
-        return float(self.get_tickets_purchased()) /\
-                float(self.get_purchase_count())
+        purchase_count = self.get_purchase_count()
+        if purchase_count > 0:
+            return float(self.get_tickets_purchased()) /\
+                float(purchase_count)
+        else:
+            return 0
 
     def get_purchase_counts(self):
         counts = {}
@@ -150,6 +155,8 @@ class Tier(models.Model):
     use_queue = models.BooleanField(default=False)
     max_purchase = models.PositiveSmallIntegerField(default=6)
     reservation_required = models.BooleanField(default=False)
+    is_lottery = models.BooleanField(default=False)
+    require_code = models.BooleanField(default=False)
 
     def get_tickets_purchased(self):
         tickets_paid = self.ticket_set.filter(
@@ -332,6 +339,7 @@ class Ticket(models.Model):
     assigned_name = models.CharField(max_length=255, blank=True, null=True)
     number = models.PositiveSmallIntegerField(blank=True, null=True)
     code = models.CharField(max_length=4, blank=True, null=True)
+    waiver = models.TextField(blank=True, null=True)
 
     def set_code(self):
         self.code = ''.join([random.choice(string.digits) for i in range(4)])
@@ -354,3 +362,13 @@ WHERE texas_tier.occurrence_id = %i
     def __unicode__(self):
         return "%s - %s" % (self.tier.__unicode__(), self.number)
 
+class Chance(models.Model):
+    user = models.ForeignKey(User, unique=True)
+    tier = models.ForeignKey(Tier)
+    name = models.CharField(max_length=255)
+    email = models.CharField(max_length=255)
+    request_date = models.DateTimeField('Request date', default=datetime.now())
+    queue_code = models.CharField(max_length=10, blank=True, null=True)
+
+    def __unicode__(self):
+        return "%s, %s" % (self.tier.__unicode__(), self.user.__unicode__())

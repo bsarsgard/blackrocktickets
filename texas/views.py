@@ -256,7 +256,7 @@ def buy(request):
         need_code = False
         for occurrence in occurrences:
             for tier in occurrence.get_active_tiers():
-                if tier.use_queue:
+                if tier.use_queue or tier.is_lottery:
                     need_code = True
                     break
             if need_code:
@@ -265,7 +265,10 @@ def buy(request):
             code = get_code(request)
             if code:
                 show = "show"
-            if code and not check_queue_code(code):
+            if code and tier.is_lottery and not check_lottery_code(request, code):
+                return direct_to_template(request, 'texas/error.html',
+                    {'message': "Invalid lottery code!"})
+            elif code and tier.use_queue and not check_queue_code(code):
                 return direct_to_template(request, 'texas/error.html',
                     {'message': "Invalid queue code!"})
         response = direct_to_template(request, 'texas/buy.html', {'occurrences':
@@ -285,9 +288,11 @@ def get_code(request):
         # check for code in session
         if 'code' in request.COOKIES:
             code = request.COOKIES['code']
+            """
             if not check_queue_code(code):
                 # if it's bad, ignore it
                 code = None
+            """
     return code
 
 def buy_occurrence(request, occurrence_id):
@@ -302,7 +307,7 @@ def buy_occurrence(request, occurrence_id):
         need_code = False
         for occurrence in occurrences:
             for tier in occurrence.get_active_tiers():
-                if tier.use_queue:
+                if tier.use_queue or tier.is_lottery:
                     need_code = True
                     break
             if need_code:
@@ -311,7 +316,10 @@ def buy_occurrence(request, occurrence_id):
             code = get_code(request)
             if code:
                 show = "show"
-        if code and not check_queue_code(code):
+        if code and tier.is_lottery and not check_lottery_code(request, code):
+	    return direct_to_template(request, 'texas/error.html',
+	        {'message': "Invalid lottery code!"})
+        elif code and tier.use_queue and not check_queue_code(code):
             return direct_to_template(request, 'texas/error.html',
                 {'message': "Invalid queue code!"})
         response = direct_to_template(request, 'texas/buy.html', {'occurrences':
@@ -324,6 +332,23 @@ def buy_occurrence(request, occurrence_id):
                     "%a, %d-%b-%Y %H:%M:%S GMT")
             response.set_cookie('code', code, max_age, expires)
         return response
+
+def check_lottery_code(request, code):
+    try:
+        chance = Chance.objects.get(queue_code=code)
+    except Chance.DoesNotExist:
+        return False
+
+    if chance.user != request.user:
+        return False
+
+    if PurchaseRequest.objects.filter(
+            queue_code=code).exclude(
+            purchase__isnull=True).exclude(
+            purchase__status='D').exists():
+        return False
+    else:
+        return True
 
 def check_queue_code(code):
     f = urlopen("%s/check/%s" % (settings.QUEUE_URL, code))
@@ -351,6 +376,7 @@ def pay_queue_code(code):
 
 def do_buy(request, occurrences):
     code = request.POST.get('code', None)
+    show = request.GET.get('show', None)
     total_tickets = 0
     ip_address = request.META['REMOTE_ADDR']
 
@@ -371,6 +397,7 @@ def do_buy(request, occurrences):
                     {'occurrences': occurrences,
                     'error': 'Invalid coupon code!', 'code': code})
 
+    purchase_request = None
     for occurrence in occurrences:
         for tier in occurrence.tier_set.all():
             tickets_requested = int(
@@ -413,7 +440,12 @@ def do_buy(request, occurrences):
                     if not use_queue_code(code, tickets_requested):
                         return direct_to_template(request, 'texas/error.html',
                                 {'message': "Invalid queue code!"})
-                total_tickets += tickets_requested
+                if tier.is_lottery and code:
+                    if not check_lottery_code(request, code):
+                        return direct_to_template(request, 'texas/error.html',
+                                {'message': "Invalid queue code!"})
+                if tier.price > 0:
+                    total_tickets += tickets_requested
                 request_date = datetime.now()
                 expires = timedelta(minutes=15)
                 expiration_date = request_date + expires
@@ -440,9 +472,11 @@ def do_buy(request, occurrences):
                         purchase_request.options.add(option)
 
     if total_tickets == 0:
+        if purchase_request:
+            purchase_request.delete()
         return direct_to_template(request, 'texas/buy.html', {'occurrences':
                 occurrences, 'error': 'You have not selected anything!',
-                'code': code})
+                'code': code, 'show': show})
     else:
         # purchases were requested
         if request.user.is_authenticated():
@@ -461,49 +495,66 @@ def do_process_requests(ip_address, user):
             expiration_date__lte=datetime.now()
     )
 
-    if purchase_requests.count() > 0:
+    if len(purchase_requests) > 0:
         purchase_date = datetime.now()
         expires = timedelta(minutes=30)
         expiration_date = purchase_date + expires
+        occurrence = purchase_requests[0].tier.occurrence
+        tickets_requested = 0
+        coupon = None
+
         for purchase_request in purchase_requests:
-            # turn into real purchases
-            purchase = Purchase(user=user,
-                    occurrence=purchase_request.tier.occurrence,
-                    purchase_date=purchase_date,
-                    expiration_date=expiration_date,
-                    tickets_requested=purchase_request.tickets_requested,
-                    coupon=purchase_request.coupon)
+            tickets_requested += purchase_request.tickets_requested
+            if purchase_request.coupon:
+                coupon = purchase_request.coupon
+
+        # turn into real purchases
+        purchase = Purchase(user=user,
+                occurrence=occurrence,
+                purchase_date=purchase_date,
+                expiration_date=expiration_date,
+                tickets_requested=0,
+                coupon=coupon)
+
+        for purchase_request in purchase_requests:
             # check ticket available count here
             # add current request to available count, since it's already
             # subtracted from the count
+            tickets_requested = purchase_request.tickets_requested
             available = purchase_request.tier.raw_tickets_available() +\
-                    purchase_request.tickets_requested
-            if available < purchase_request.tickets_requested:
-                if available < 1:
-                    purchase.tickets_requested = 0
-                else:
-                    purchase.tickets_requested = available
-            if purchase.tickets_requested > 0:
+                    tickets_requested
+
+            if available < tickets_requested:
+                tickets_requested = available
+
+            if tickets_requested > 0:
+                purchase.tickets_requested += tickets_requested
                 purchase.save()
-                purchase.options = purchase_request.options.all()
-                for ii in range(purchase.tickets_requested):
+
+                for ii in range(tickets_requested):
                     ticket = Ticket(tier=purchase_request.tier,
                             purchase=purchase)
                     ticket.save()
                     purchase.amount_due += ticket.tier.price
-                if purchase.coupon:
-                    purchase.amount_due -= purchase.coupon.discount
-                for option in purchase.options.all():
+
+                for option in purchase_request.options.all():
+                    purchase.options.add(option)
                     if option.price:
                         purchase.amount_due += option.price
+
                 #if purchase_request.donation_amount:
                 #    purchase.amount_due += purchase_request.donation_amount
-                if purchase.amount_due <= 0:
-                    purchase.amount_due = 0
-                    purchase.status = 'P'
                 purchase_request.purchase = purchase
                 purchase_request.save()
-                purchase.save()
+
+        if purchase.coupon:
+            purchase.amount_due -= purchase.coupon.discount
+
+        if purchase.amount_due <= 0:
+            purchase.amount_due = 0
+            purchase.status = 'P'
+
+        purchase.save()
 
 def requests(request):
     ip_address = request.META['REMOTE_ADDR']
@@ -714,12 +765,13 @@ def paypal_process(request, purchase_id):
             purchase.save()
             for ticket in purchase.ticket_set.all():
                 ticket.assigned_name = payment.purchaser_name
+                ticket.waiver = str(request.POST)
                 ticket.set_code()
                 ticket.set_number()
             do_send_purchase_confirmation(purchase)
         # update queue
         for purchaserequest in purchase.purchaserequest_set.all():
-            if purchaserequest.queue_code:
+            if purchaserequest.tier.use_queue and purchaserequest.queue_code:
                 pay_queue_code(purchaserequest.queue_code)
         return redirect_to(request, "/buy/purchases/receipt/%i/" % purchase.id)
     else:
@@ -835,25 +887,26 @@ To confirm your account, please go to the following url:
 %s
 
 Email: %s
-Password: %s
 
 Thanks,
-%s""" % (confirm_url, user.email, password, site.name)
+%s""" % (confirm_url, user.email, site.name)
     send_mail(subject, body, from_address, to_address)
 
 def user_login(request):
     if request.method == 'POST':
+        next_url = request.POST.get('next', '')
         if request.POST.get('username', '') == '':
             form = LoginForm()
             message = "Please enter an email address and password."
             return direct_to_template(request, 'registration/login.html',
-                    {'form': form, 'message': message})
+                    {'form': form, 'message': message, 'next_url': next_url})
         if request.POST.get('login_is_new', '0') == '1':
             if request.POST.get('password', '') == '':
                 form = LoginForm()
                 message = "Please enter an email address and password."
                 return direct_to_template(request, 'registration/login.html',
-                        {'form': form, 'message': message})
+                        {'form': form, 'message': message,
+                         'next_url': next_url})
             try:
                 try:
                     user = User.objects.get(email=request.POST['username'])
@@ -896,7 +949,7 @@ def user_login(request):
                 form = LoginForm()
                 message = "Your password has been reset and emailed to you."
                 return direct_to_template(request, 'registration/login.html',
-                    {'form': form, 'message': message})
+                    {'form': form, 'message': message, 'next_url': next_url})
             except Exception, ex:
                 form = LoginForm()
                 return direct_to_template(request, 'texas/error.html',
@@ -909,24 +962,30 @@ def user_login(request):
                     ip_address = request.META['REMOTE_ADDR']
                     do_process_requests(ip_address, user)
                     login(request, user)
-                    return redirect_to(request, '/buy/purchases/')
+                    if next_url:
+                        return redirect_to(request, next_url)
+                    else:
+                        return redirect_to(request, '/buy/purchases/')
                 else:
                     #return direct_to_template(request, 'registration/inactive_account.html')
                     form = LoginForm()
                     message = "Your account is not active."
                     return direct_to_template(request,
                             'registration/login.html',
-                            {'form': form, 'message': message})
+                            {'form': form, 'message': message,
+                            'next_url': next_url})
             else:
                 #return direct_to_template(request, 'registration/invalid_login.html')
                 form = LoginForm()
                 message = "Invalid credentials."
                 return direct_to_template(request, 'registration/login.html',
-                        {'form': form, 'message': message})
+                        {'form': form, 'message': message,
+                         'next_url': next_url})
     else:
+        next_url = request.GET.get('next', '')
         form = LoginForm()
         return direct_to_template(request, 'registration/login.html', {'form':
-                form})
+                form, 'next_url': next_url})
 
 def user_confirm(request, user_id, code):
     try:
@@ -958,3 +1017,44 @@ def user_logout(request):
 
 def user_profile(request):
     return direct_to_template(request, 'registration/profile.html')
+
+def chance_tier(request, tier_id):
+    tier = get_object_or_404(Tier, pk=tier_id)
+
+    if request.user.is_anonymous():
+        return redirect_to(request, '/login/')
+
+    try:
+        chance = Chance.objects.get(tier=tier, user=request.user)
+    except Chance.DoesNotExist:
+        chance = None
+
+    if request.method == 'POST':
+        form = ChanceForm(request.POST)
+        if form.is_valid():
+            name = form.cleaned_data['name']
+            email = form.cleaned_data['email']
+
+            chance = Chance(
+                user=request.user,
+                tier=tier,
+                name=name,
+                email=email,
+                request_date = datetime.now())
+            chance.save()
+
+            form = SaleForm()
+            return direct_to_template(request, 'texas/tier_chance.html',
+                {'form': form, 'chance': chance})
+        else:
+            return direct_to_template(request, 'texas/tier_chance.html',
+                {'form': form, 'chance': chance,
+                 'message': "Please fill out all fields completely."})
+    else:
+        profile, created = UserProfile.objects.get_or_create(user=request.user)
+        form = ChanceForm(initial={
+            'name': profile.name,
+            'email': request.user.email,
+        })
+        return direct_to_template(request, 'texas/tier_chance.html', {'form':
+                form, 'chance': chance})

@@ -25,3 +25,8 @@ class SaleForm(forms.Form):
     tickets = forms.CharField(label='Number of Tickets', max_length=2)
     name = forms.CharField(label='Full Name', max_length=50)
     email = forms.CharField(label='Email', max_length=75)
+
+class ChanceForm(forms.Form):
+    name = forms.CharField(label='Full Name', max_length=255)
+    email = forms.CharField(label='Primary Email', max_length=255)
+
