@@ -54,7 +54,11 @@ $(document).ready(function() {
         </h4>
         <p class="list-group-item-text">
           <a href="/tickets/print/{{ ticket.id }}/" target="_blank" class="btn btn-primary btn-sm">Print</a>
+          {% if ticket.code %}
+          {% if not ticket.purchase.coupon_id or not forloop.first %}
           <button class="btn btn-primary btn-sm btn-transfer pull-right" id="{{ ticket.id }}">Transfer</button>
+          {% endif %}
+          {% endif %}
         </p>
       </div>
       {% endif %}

@@ -721,6 +721,8 @@ def ticket_waiver(request, ticket_id):
         return direct_to_template(request, 'texas/error.html',
             {'message': "This ticket is assigned to another user"})
     elif request.method == 'POST':
+        if 'name' in request.POST:
+            ticket.assigned_name = request.POST['name']
         ticket.waiver = str(request.POST)
         ticket.save()
         return redirect_to(request, "/tickets/")
