@@ -207,7 +207,7 @@ class Tier(models.Model):
 
     def get_ticket_set_for_list(self):
         return self.ticket_set.filter(purchase__status='P').order_by(
-                'assigned_name')
+                'number')
 
     def __unicode__(self):
         return "%s, %s" % (self.occurrence.__unicode__(), self.label)
@@ -358,6 +358,49 @@ WHERE texas_tier.occurrence_id = %i
             number = row[0] + 1
         self.number = number
         self.save()
+
+    @property
+    def waiver_name(self):
+        if self.waiver:
+            waiver_data = eval(self.waiver[12:-1])
+            name = str(waiver_data.get('name', ''))[3:-2].strip()
+            if not ',' in name and ' ' in name:
+                names = name.split(' ')
+                names.reverse()
+                name = ', '.join(names)
+            return name
+        else:
+            return ''
+
+    @property
+    def waiver_state(self):
+        if self.waiver:
+            waiver_data = eval(self.waiver[12:-1])
+            return str(waiver_data.get('state', ''))[3:-2]
+
+    @property
+    def waiver_zip(self):
+        if self.waiver:
+            waiver_data = eval(self.waiver[12:-1])
+            return str(waiver_data.get('zip', ''))[3:-2]
+
+    @property
+    def waiver_city(self):
+        if self.waiver:
+            waiver_data = eval(self.waiver[12:-1])
+            return str(waiver_data.get('city', ''))[3:-2]
+
+    @property
+    def waiver_address(self):
+        if self.waiver:
+            waiver_data = eval(self.waiver[12:-1])
+            return str(waiver_data.get('address', ''))[3:-2]
+
+    @property
+    def waiver_emergency(self):
+        if self.waiver:
+            waiver_data = eval(self.waiver[12:-1])
+            return str(waiver_data.get('emergency', ''))[3:-2]
 
     def __unicode__(self):
         return "%s - %s" % (self.tier.__unicode__(), self.number)

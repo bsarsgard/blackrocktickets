@@ -4,25 +4,37 @@
 {% block title %}About Us{% endblock %}
 {% block content %}
 <div class="header_01">Administer {{ occurrence }} - Ticket List</div>
-<table class="ticket_listing">
-<tbody>
 {% for tier in occurrence.tier_set.all %}
+<h3>{{ tier.label }} - {{ tier.get_ticket_count }}</h3>
+<table class="table table-striped">
+<thead>
 	<tr>
-		<th colspan="4">{{ tier.label }} - {{ tier.get_ticket_count }}</th>
+        <th>Number</th>
+        <th>Purchaser</th>
+        <th>Assignee</th>
+        <th>Name</th>
+        <th>Address</th>
+        <th>Emergency</th>
+        <th>Purchased</th>
 	</tr>
+</thead>
+<tbody>
 	{% for ticket in tier.get_ticket_set_for_list %}
 	<tr>
 		<td>{{ ticket.tier.code }}{{ ticket.number|stringformat:"05i" }}{{ ticket.code }}</td>
 		<td>{{ ticket.purchase.user.email }}</td>
+        <td>{% if ticket.assigned_user %}{{ ticket.assigned_user.email }}{% endif %}</td>
 		<td>
-		{{ ticket.assigned_name }}
+            {% firstof ticket.waiver_name ticket.assigned_name %}
 		</td>
+        <td>{{ ticket.waiver_address }} {{ ticket.waiver_city }} {{ ticket.waiver_state }} {{ ticket.waiver_zip }}
+        <td>{{ ticket.waiver_emergency }}</td>
 		<td>{{ ticket.purchase.purchase_date }}</td>
 	</tr>
 	{% endfor %}
-{% endfor %}
 </tbody>
 </table>
+{% endfor %}
 <br/>
 <div class="rc_btn_01"><a href="/events/{{ occurrence.event.id }}/admin/">Back</a></div>
 {% endblock %}
