@@ -284,7 +284,11 @@ class Purchase(models.Model):
                 "tickets@playadelfuego.org")
 
     def __unicode__(self):
-        return "%s: %s" % (self.occurrence, self.tickets_requested)
+        return "%s: %s %s (%s)" % (
+                self.occurrence,
+                self.user,
+                self.tickets_requested,
+                self.status)
 
 class PurchaseRequest(models.Model):
     tier = models.ForeignKey(Tier)

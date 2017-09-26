@@ -16,24 +16,29 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from django.http import HttpResponse
-from django.views.generic.simple import direct_to_template, redirect_to
-from tickets.texas.models import *
-from tickets.texas.forms import *
 from datetime import datetime
 from datetime import timedelta
-from django.contrib.auth.models import User
-from django.contrib.auth import login, logout, authenticate
-from paypal import PayPal
-from django.core.mail import send_mail, EmailMessage
 from random import Random
-from django.conf import settings
-from django.contrib.sites.models import Site
-from django.shortcuts import get_object_or_404
-from django.contrib.contenttypes.models import ContentType
-from utils import *
 from urllib import urlopen
+
+from paypal import PayPal
+
+from django.conf import settings
+from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.sites.models import Site
+from django.core.mail import send_mail, EmailMessage
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from django.views.generic.simple import direct_to_template, redirect_to
+
+from tickets.texas.forms import *
+from tickets.texas.models import *
+from utils import *
+
 import queries
+import mybarcode
 
 def index(request):
     events = Event.objects.filter(occurrence__end_date__gte=datetime.now())
@@ -1086,3 +1091,9 @@ def chance_tier(request, tier_id):
         })
         return direct_to_template(request, 'texas/tier_chance.html', {'form':
                 form, 'chance': chance})
+
+def barcode(request):
+    #instantiate a drawing object
+    d = mybarcode.MyBarcodeDrawing(request.GET.get('code'), request.GET.get('width', 0), request.GET.get('height', 0))
+    binaryStuff = d.asString('gif')
+    return HttpResponse(binaryStuff, 'image/gif')
